@@ -1,0 +1,5 @@
+{
+    "name": "iMessage",
+    "description": "Exports all your iMessages.",
+    "needsConnection": false
+}
