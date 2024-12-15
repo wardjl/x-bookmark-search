@@ -1,52 +1,75 @@
 # Bookmarks Wrapped
 
-Bookmarks Wrapped is a Chrome extension that is Spotify Wrapped for your Twitter bookmarks.
+Bookmarks Wrapped is a Chrome extension that generates your Twitter/X bookmarks wrapped experience, similar to Spotify Wrapped. See your top bookmarked accounts, reading time stats, and monthly trends in a beautiful presentation.
 
 ## Features
 
-- Export all your Twitter bookmarks with a single click
-- Saves bookmarks as a JSON file
-- Includes tweet text, timestamp, and media information
-- Handles pagination to fetch all bookmarks
+- View your 2024 Twitter/X bookmarks statistics in an engaging slideshow format
+- See your top bookmarked accounts
+- Track your reading time and monthly bookmarking trends
+- Beautiful, interactive UI with smooth transitions
+- Export and share your stats
+- Privacy-focused: all processing happens locally in your browser
+
+## Project Structure
+
+The project consists of two main components:
+
+### Extension (`/extension`)
+- Chrome extension that processes your bookmarks and generates the wrapped experience
+- Built with vanilla JavaScript, HTML, and CSS
+- Uses html2canvas for generating shareable images
+
+### Landing Page (`/landing`)
+- Marketing website for the extension
+- Built with Vite, TailwindCSS, and deployed on Firebase
+- Modern, responsive design
 
 ## Installation
 
-1. Clone this repository or download the source code.
-2. Open Chrome and navigate to `chrome://extensions/`.
-3. Enable "Developer mode" in the top right corner.
-4. Click "Load unpacked" and select the directory containing the extension files.
+1. Clone this repository or download the source code
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable "Developer mode" in the top right corner
+4. Click "Load unpacked" and select the `extension` directory
 
 ## Usage
 
-1. Click on the extension icon in your Chrome toolbar to open the popup.
-2. Click the "Export Bookmarks" button.
-3. The extension will open a new tab to Twitter's bookmarks page.
-4. Wait for the export process to complete. The status will be shown in the popup.
-5. Once finished, a JSON file containing your bookmarks will be downloaded automatically.
-
-## File Structure
-
-- `manifest.json`: Extension configuration
-- `popup.html`: HTML for the extension popup
-- `popup.js`: JavaScript for the popup functionality
-- `background.js`: Background script for handling bookmark export
-
-## Permissions
-
-This extension requires the following permissions:
-
-- `scripting`: To interact with web pages
-- `downloads`: To save the exported bookmarks file
-- `storage`: To store necessary data locally
-- `webRequest`: To intercept and handle web requests
+1. Click on the extension icon in your Chrome toolbar
+2. Click "🎁 Wrap My Bookmarks 🎁"
+3. Enjoy your personalized bookmarks wrapped experience!
+4. Share your stats with friends
 
 ## Development
 
-To modify or extend this extension:
+### Extension
+```bash
+cd extension
+# Load unpacked extension in Chrome for development
+```
 
-1. Update the manifest.json file for any new permissions or features.
-2. Modify popup.html and popup.js for changes to the user interface.
-3. Edit background.js to alter the bookmark fetching and processing logic.
+### Landing Page
+```bash
+cd landing
+npm install
+npm run dev     # Start development server
+npm run build   # Build for production
+firebase deploy  # Deploy to Firebase
+```
+
+## File Structure
+
+### Extension
+- `manifest.json`: Extension configuration
+- `popup.html/js/css`: Main extension UI and logic
+- `background.js`: Background script for bookmark processing
+- `content.js`: Content script for page interaction
+- `html2canvas.min.js`: For generating shareable images
+
+### Landing Page
+- `src/`: Source code for the landing page
+- `public/`: Static assets
+- `dist/`: Built files
+- Configuration files for Vite, TailwindCSS, and Firebase
 
 ## Contributing
 
@@ -58,4 +81,4 @@ MIT License
 
 ## Disclaimer
 
-This extension is not affiliated with, endorsed, or sponsored by Twitter, Inc. Use at your own risk.
+This project is not affiliated with, endorsed, or sponsored by Twitter/X Corp. Use at your own risk. Please don't sue me, Elon 🙏

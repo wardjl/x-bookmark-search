@@ -105,13 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Update share button click handler
     document.querySelector('.share-all-button').addEventListener('click', async () => {
         const button = document.querySelector('.share-all-button');
         const collageContainer = document.getElementById('final-collage');
-        const shareUrl = collageContainer.dataset.shareUrl;
+        const imageData = collageContainer.dataset.shareUrl;
         
-        if (!shareUrl) {
+        if (!imageData) {
             alert('Please wait for the display to finish generating');
             return;
         }
@@ -119,11 +118,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalText = button.textContent;
         button.innerHTML = `
             <span class="button-spinner"></span>
-            <span>🤦 told you not to share</span>
+            <span>Sharing...</span>
         `;
         
         try {
-            const tweetText = `Check out my 2024 Bookmarks Wrapped! ${shareUrl}`;
+            // Convert base64 to blob
+            const response = await fetch(imageData);
+            const blob = await response.blob();
+
+            // Create FormData and append the image
+            const formData = new FormData();
+            formData.append('filename', blob, 'bookmarks-wrapped.png');
+
+            // Upload to Magic API
+            const uploadResponse = await fetch('https://api.magicapi.dev/api/v1/magicapi/image-upload/upload', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'x-magicapi-key': 'your-api-key'
+                },
+                body: formData
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('Failed to upload image');
+            }
+
+            const uploadResult = await uploadResponse.json();
+            const imageUrl = uploadResult.url; // Assuming the API returns the URL in this format
+
+            const tweetText = `Check out my 2024 Bookmarks Wrapped:\n\n${imageUrl}\n\np.s: @elonmusk please don't sue @sahillalani0`;
             window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText), '_blank');
         } catch (error) {
             console.error('Error sharing:', error);
@@ -280,34 +304,6 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Failed to share. Please try again.');
         }
     }
-
-    // Update share all button functionality
-    document.querySelector('.share-all-button').addEventListener('click', async () => {
-        const button = document.querySelector('.share-all-button');
-        const originalText = button.textContent;
-        button.innerHTML = `
-            <span class="button-spinner"></span>
-            <span>🤦 told you not to share</span>
-        `;
-
-        try {
-            // Take a screenshot of the final collage
-            const response = await fetch(screenshots['slide1']); // Use first screenshot for now
-            const blob = await response.blob();
-            
-            // Create FormData and append the image
-            const formData = new FormData();
-            formData.append('filename', blob, 'bookmarks-wrapped-all.png');
-            
-            // Upload to server (you'll need to implement this part)
-            const imageUrl = screenshots['slide1']; // Placeholder
-            const tweetText = `Check out my 2024 Bookmarks Wrapped! ${imageUrl}`;
-            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText), '_blank');
-        } catch (error) {
-            console.error('Error sharing collage:', error);
-            alert('Failed to share. Please try again.');
-        }
-    });
 
     chrome.runtime.onMessage.addListener((message) => {
         if (message.action === "tweetsReady") {
