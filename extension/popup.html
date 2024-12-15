@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bookmarks Wrapped</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+  <script src="html2canvas.min.js"></script>
+</head>
+<body>
+  <div id="initial-screen">
+    <h1>Bookmarks Wrapped</h1>
+    <h2>Don't sue me Elon</h2>
+    <button id="exportButton" class="primary-button">
+      🎁 Wrap My Bookmarks 🎁
+    </button>
+    <button class="support-button" id="coffeeButton">
+      🍵 Support This Project if I actually get sued by Elon 🍵
+    </button>
+    <div id="status"></div>
+    <div class="loader" id="loader"></div>
+  </div>
+
+  <div id="slideshow" class="hidden">
+    <div class="slide" id="intro-slide">
+      <div class="slide-content">
+        <h2>Are you ready for your</h2>
+        <div class="big-number">2024</div>
+        <h2>Bookmarks Wrapped?</h2>
+        <div class="fun-buttons">
+          <button class="fun-choice-button">Yes</button>
+          <button class="fun-choice-button">Yes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide" id="total-bookmarks">
+      <div class="slide-content">
+        <h2>In 2024, you saved</h2>
+        <div class="big-number" id="bookmarks-count">0</div>
+        <h2>posts to your bookmarks</h2>
+      </div>
+    </div>
+
+    <div class="slide" id="top-authors">
+      <div class="slide-content">
+        <h2>Your Top Bookmarked Accounts</h2>
+        <div id="authors-list"></div>
+      </div>
+    </div>
+
+    <div class="slide" id="reading-time">
+      <div class="slide-content">
+        <h2>You spent</h2>
+        <div class="big-number" id="reading-time-count">0</div>
+        <h2>minutes reading bookmarks</h2>
+        <div class="fun-fact" id="reading-fact">In that time, you could have watched Elon smoke weed on Joe Rogan 0 times</div>
+      </div>
+    </div>
+
+    <div class="slide" id="monthly-stats">
+      <div class="slide-content">
+        <h2>Your most active bookmarking month was</h2>
+        <div class="big-number" id="top-month">JAN</div>
+        <div class="month-count">with <span id="month-count">0</span> bookmarks</div>
+        <div class="fun-fact">You were really going through it that month huh</div>
+      </div>
+    </div>
+
+    <div class="slide" id="outro-slide">
+      <div class="slide-content">
+        <div class="content-left">
+          <h2>Thanks for using</h2>
+          <div class="big-number">Bookmarks</div>
+          <h2>Wrapped</h2>
+          <div class="fun-fact">Will this be back in 2025? Who knows... Elon might sue me by then 🤷‍♂️</div>
+        </div>
+        <div class="content-right">
+          <div id="final-collage"></div>
+          <button class="share-all-button">Share Your Year</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="navigation">
+      <button id="prev-slide" class="nav-button">←</button>
+      <div id="slide-dots"></div>
+      <button id="next-slide" class="nav-button">→</button>
+    </div>
+  </div>
+
+  <div id="tweetsContainer"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
