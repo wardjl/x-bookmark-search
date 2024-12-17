@@ -196,7 +196,8 @@
       transition: all 0.2s;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      backdrop-filter: blur(5px);
     }
 
     .share-platform-button:hover {
@@ -211,6 +212,13 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    .platform-logo {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+      background: transparent;
     }
 
     /* Rest of your existing styles for slideshow etc... */
@@ -301,15 +309,15 @@
             <div class="share-label">Share on:</div>
             <div class="share-buttons">
               <button class="share-platform-button" id="share-twitter">
-                <span class="button-icon">🐦</span>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Twitter_Logo_Blue.png" alt="Twitter" class="platform-logo">
                 Twitter
               </button>
               <button class="share-platform-button" id="share-imessage">
-                <span class="button-icon">💬</span>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IMessage_logo.svg" alt="iMessage" class="platform-logo">
                 iMessage
               </button>
               <button class="share-platform-button" id="share-whatsapp">
-                <span class="button-icon">📱</span>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="platform-logo">
                 WhatsApp
               </button>
             </div>
