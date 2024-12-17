@@ -146,7 +146,9 @@
     }
 
     .copy-button {
-      background: #1DA1F2;
+      background: linear-gradient(45deg, #00acee, #1da1f2, #0084b4, #00aced);
+      background-size: 300% 300%;
+      animation: gradient 4s ease infinite, bounce 1.5s ease-in-out infinite;
       color: white;
       border: none;
       padding: 12px 24px;
@@ -160,10 +162,48 @@
       gap: 8px;
       width: 100%;
       justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .copy-button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.1);
+      transform: rotate(45deg);
+      animation: shine 3s infinite;
     }
 
     .copy-button:hover {
-      background: #1991db;
+      transform: scale(1.05);
+    }
+
+    @keyframes shine {
+      0% {
+        left: -50%;
+      }
+      100% {
+        left: 150%;
+      }
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+          transform: translateY(0);
+      }
+      50% {
+          transform: translateY(-7.5px);
+      }
     }
 
     .share-options {
