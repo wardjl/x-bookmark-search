@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevButton = document.getElementById('prev-slide');
     const nextButton = document.getElementById('next-slide');
     const slideDots = document.getElementById('slide-dots');
+    const copyButton = document.getElementById('copy-button');
 
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
@@ -30,7 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
         window.open('https://ko-fi.com/sahillalani', '_blank');
     });
     
-    let screenshots = {};
+    let screenshots = {
+        totalBookmarks: null,
+        topAuthors: null,
+        readingTime: null,
+        monthlyStats: null
+    };
 
     async function showSlide(index) {
         slides.forEach(slide => slide.classList.remove('active'));
@@ -43,8 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
         prevButton.style.visibility = index === 0 ? 'hidden' : 'visible';
         nextButton.style.visibility = index === slides.length - 1 ? 'hidden' : 'visible';
 
-        // Take screenshot of current slide if it's the top 5 accounts slide
-        if (index === 2) {  
+        // Take screenshots of the stats slides
+        if (index >= 1 && index <= 4) {  // Stats slides are from index 1 to 4
             try {
                 const slideContent = slides[index].querySelector('.slide-content');
                 if (slideContent) {
@@ -55,8 +61,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         logging: false
                     }).then(canvas => {
                         const dataURL = canvas.toDataURL("image/png", 1.0);
-                        console.log('Screenshot taken of top 5 accounts');
-                        screenshots.topAccounts = dataURL;
+                        switch(index) {
+                            case 1:
+                                screenshots.totalBookmarks = dataURL;
+                                break;
+                            case 2:
+                                screenshots.topAuthors = dataURL;
+                                break;
+                            case 3:
+                                screenshots.readingTime = dataURL;
+                                break;
+                            case 4:
+                                screenshots.monthlyStats = dataURL;
+                                break;
+                        }
+                        console.log(`Screenshot taken for slide ${index}`);
                     }).catch(error => {
                         console.error('Screenshot error:', error);
                     });
@@ -67,10 +86,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // If it's the last slide, create the display
-        if (index === slides.length - 1 && screenshots.topAccounts) {
+        if (index === slides.length - 1) {
             createFinalCollage();
         }
     }
+
+    let currentPreviewIndex = 0;
+    const previewSlides = ['totalBookmarks', 'topAuthors', 'readingTime', 'monthlyStats'];
 
     async function createFinalCollage() {
         const collageContainer = document.getElementById('final-collage');
@@ -79,99 +101,72 @@ document.addEventListener('DOMContentLoaded', function() {
         collageContainer.innerHTML = '<div class="collage-loading"></div>';
         
         try {
-            // Create a container for the screenshot
+            // Create a container for the slideshow
             const container = document.createElement('div');
-            container.style.padding = '20px';
-            container.style.backgroundColor = '#1a1f2e';
-            container.style.borderRadius = '20px';
-            container.style.maxWidth = '90%';
-            container.style.margin = '0 auto';
+            container.className = 'preview-slideshow';
+            container.style.position = 'relative';
             
-            // Add the screenshot
+            // Add navigation arrows
+            const prevArrow = document.createElement('button');
+            prevArrow.className = 'preview-nav prev';
+            prevArrow.innerHTML = '←';
+            prevArrow.onclick = () => showPreviewSlide((currentPreviewIndex - 1 + previewSlides.length) % previewSlides.length);
+            
+            const nextArrow = document.createElement('button');
+            nextArrow.className = 'preview-nav next';
+            nextArrow.innerHTML = '→';
+            nextArrow.onclick = () => showPreviewSlide((currentPreviewIndex + 1) % previewSlides.length);
+            
+            // Add preview dots
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'preview-dots';
+            previewSlides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'preview-dot' + (index === 0 ? ' active' : '');
+                dot.onclick = () => showPreviewSlide(index);
+                dotsContainer.appendChild(dot);
+            });
+            
+            // Add the image container
             const imageWrapper = document.createElement('div');
-            imageWrapper.style.width = '100%';
-            imageWrapper.style.height = '400px';  
-            imageWrapper.style.display = 'flex';
-            imageWrapper.style.alignItems = 'center';
-            imageWrapper.style.justifyContent = 'center';
+            imageWrapper.className = 'preview-image-wrapper';
             
             const image = document.createElement('img');
-            image.src = screenshots.topAccounts;
-            image.style.width = 'auto';
-            image.style.height = '100%';
-            image.style.maxWidth = '100%';
-            image.style.objectFit = 'contain';
-            image.style.borderRadius = '10px';
+            image.src = screenshots[previewSlides[0]];
+            image.className = 'preview-image';
             
             imageWrapper.appendChild(image);
+            container.appendChild(prevArrow);
             container.appendChild(imageWrapper);
+            container.appendChild(nextArrow);
+            container.appendChild(dotsContainer);
             
-            // Clear the container and add the image
+            // Clear the container and add the slideshow
             collageContainer.innerHTML = '';
             collageContainer.appendChild(container);
             
-            // Store the image data for sharing
-            collageContainer.dataset.shareUrl = screenshots.topAccounts;
+            // Store the current image data for sharing
+            collageContainer.dataset.shareUrl = screenshots[previewSlides[currentPreviewIndex]];
             
         } catch (error) {
             console.error('Error creating display:', error);
             collageContainer.innerHTML = '<div>Failed to create display: ' + error.message + '</div>';
         }
     }
-    
-    document.querySelector('.share-all-button').addEventListener('click', async () => {
-        const button = document.querySelector('.share-all-button');
-        const collageContainer = document.getElementById('final-collage');
-        const imageData = collageContainer.dataset.shareUrl;
+
+    function showPreviewSlide(index) {
+        currentPreviewIndex = index;
+        const container = document.getElementById('final-collage');
+        const image = container.querySelector('.preview-image');
+        const dots = container.querySelectorAll('.preview-dot');
         
-        if (!imageData) {
-            alert('Please wait for the display to finish generating');
-            return;
-        }
+        image.src = screenshots[previewSlides[index]];
+        container.dataset.shareUrl = screenshots[previewSlides[index]];
         
-        const originalText = button.textContent;
-        button.innerHTML = `
-            <span class="button-spinner"></span>
-            <span>Sharing...</span>
-        `;
-        
-        try {
-            // Convert base64 to blob
-            const response = await fetch(imageData);
-            const blob = await response.blob();
-
-            // Create FormData and append the image
-            const formData = new FormData();
-            formData.append('filename', blob, 'bookmarks-wrapped.png');
-
-            // Upload to Magic API
-            const uploadResponse = await fetch('https://api.magicapi.dev/api/v1/magicapi/image-upload/upload', {
-                method: 'POST',
-                headers: {
-                    'accept': 'application/json',
-                    'x-magicapi-key': 'api-key'
-                },
-                body: formData
-            });
-
-            if (!uploadResponse.ok) {
-                throw new Error('Failed to upload image');
-            }
-
-            const uploadResult = await uploadResponse.json();
-            const imageUrl = uploadResult.url; // Assuming the API returns the URL in this format
-
-            const tweetText = `Check out my 2024 Bookmarks Wrapped:\n\n${imageUrl}\n\np.s: @elonmusk please don't sue @sahillalani0`;
-            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText), '_blank');
-        } catch (error) {
-            console.error('Error sharing:', error);
-            alert('Failed to share. Please try again.');
-        } finally {
-            setTimeout(() => {
-                button.textContent = originalText;
-            }, 2000);
-        }
-    });
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
+    }
 
     // Initialize slide dots
     slides.forEach((_, index) => {
@@ -207,6 +202,60 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         exportButton.disabled = true;
         chrome.runtime.sendMessage({action: "exportBookmarks"});
+    });
+
+    copyButton.addEventListener('click', async () => {
+        const button = document.querySelector('.copy-button');
+        const shareOptions = document.getElementById('share-options');
+        const collageContainer = document.getElementById('final-collage');
+        const imageData = collageContainer.dataset.shareUrl;
+        
+        try {
+            const response = await fetch(imageData);
+            const blob = await response.blob();
+            const clipboardItem = new ClipboardItem({
+                [blob.type]: blob
+            });
+            await navigator.clipboard.write([clipboardItem]);
+            
+            // Update button state
+            button.innerHTML = `
+                <span class="button-icon">✅</span>
+                Image Copied!
+            `;
+            
+            // Show share options
+            shareOptions.style.display = 'block';
+            
+            // Reset button after delay
+            setTimeout(() => {
+                button.innerHTML = `
+                    <span class="button-icon">📋</span>
+                    Copy Image to Share
+                `;
+            }, 2000);
+        } catch (error) {
+            console.error('Error copying:', error);
+            button.innerHTML = `
+                <span class="button-icon">❌</span>
+                Failed to copy
+            `;
+        }
+    });
+
+    // Handle platform-specific sharing
+    document.getElementById('share-twitter').addEventListener('click', () => {
+        const tweetText = `Check out my 2024 Bookmarks Wrapped!\n\nTry it out at https://elondontsueme.com\n\nP.S: @elonmusk please don't sue @sahillalani0\n\n[PASTE-IMAGE-HERE]`;
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweetText), '_blank');
+    });
+
+    document.getElementById('share-imessage').addEventListener('click', () => {
+        window.open('sms:', '_blank');
+    });
+
+    document.getElementById('share-whatsapp').addEventListener('click', () => {
+        const text = 'Check out my 2024 Bookmarks Wrapped!';
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
     });
 
     function processAuthorStats(tweets) {

@@ -138,6 +138,81 @@
       margin-right: 8px;
     }
 
+    .content-right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .copy-button {
+      background: #1DA1F2;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .copy-button:hover {
+      background: #1991db;
+    }
+
+    .share-options {
+      width: 100%;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .share-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .share-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .share-platform-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .share-platform-button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .button-icon {
+      font-size: 1.1em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Rest of your existing styles for slideshow etc... */
   </style>
 </head>
@@ -218,8 +293,27 @@
         </div>
         <div class="content-right">
           <div id="final-collage"></div>
-          <button class="share-all-button">Share on Twitter (if you dare)</button>
-          <button class="copy-button">Copy to Clipboard</button>
+          <button class="copy-button" id="copy-button">
+            <span class="button-icon">📋</span>
+            Copy Image to Share
+          </button>
+          <div class="share-options" id="share-options" style="display: none;">
+            <div class="share-label">Share on:</div>
+            <div class="share-buttons">
+              <button class="share-platform-button" id="share-twitter">
+                <span class="button-icon">🐦</span>
+                Twitter
+              </button>
+              <button class="share-platform-button" id="share-imessage">
+                <span class="button-icon">💬</span>
+                iMessage
+              </button>
+              <button class="share-platform-button" id="share-whatsapp">
+                <span class="button-icon">📱</span>
+                WhatsApp
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

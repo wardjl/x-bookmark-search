@@ -56,6 +56,8 @@ npm run build   # Build for production
 firebase deploy  # Deploy to Firebase
 ```
 
+Note: You need to have a firebase project setup and the firebase cli installed.
+
 ## File Structure
 
 ### Extension
