@@ -89,6 +89,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Only create the loading indicator if we're on the bookmarks page
-if (window.location.href.includes('x.com/i/bookmarks')) {
-  createLoadingIndicator();
-}
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "showLoader") {
+    createLoadingIndicator();
+  }
+});
+

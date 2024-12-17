@@ -215,7 +215,12 @@ const waitForRequiredData = () => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "exportBookmarks") {
-    chrome.tabs.create({ url: "https://x.com/i/bookmarks/all" });
+    chrome.tabs.create({ url: "https://x.com/i/bookmarks/all" }, (newTab) => {
+      setTimeout(() => {
+        chrome.tabs.sendMessage(newTab.id, {action: "showLoader"});
+      }, 1000);
+    });
+    
     console.log("Received export request from popup");
 
     waitForRequiredData().then(() => {
@@ -223,13 +228,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ status: "started" });
     });
 
-    return true; // Indicates that the response is sent asynchronously
+    return true;
   }
+  
   if (request.action === "takeScreenshot") {
-    // chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
-    //   sendResponse({ imageData: dataUrl });
-    // });
-    // return true; // Required for async response
+
     const slideContent = document.querySelector('.slide-content');
     if (!slideContent) {
         sendResponse({error: "No slide content found"});
