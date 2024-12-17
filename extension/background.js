@@ -96,29 +96,46 @@ const getBookmarks = async (cursor = "", totalImported = 0, allTweets = []) => {
           if (nextCursor && newTweetsCount > 0 && !isDone) {
             await getBookmarks(nextCursor, totalImported, allTweets);
           } else {
-
             console.log("Import completed. Total imported:", totalImported);
             console.log("All imported tweets:", allTweets);
+            
+            chrome.tabs.query({}, function(tabs) {
+              tabs.forEach(tab => {
+                if (tab.url && (tab.url.includes('x.com/i/bookmarks') || tab.url.includes('twitter.com/i/bookmarks'))) {
+                  chrome.tabs.sendMessage(tab.id, { action: "hideLoader" });
+                }
+              });
+            });
             
             chrome.runtime.sendMessage({
               action: "tweetsReady",
               tweets: allTweets
             });
             
-            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-              if (tabs[0]) {
-                chrome.scripting.executeScript({
-                  target: { tabId: tabs[0].id },
-                  func: () => {
-                    alert("🤫 WARNING: Your Bookmarks Wrapped is ready. Elon doesn't want you to see this!");
-                  }
-                });
+            chrome.tabs.query({}, function(tabs) {
+              const popupTabs = tabs.filter(tab => 
+                !tab.url && !tab.title
+              );
+
+              const popupTab = popupTabs[popupTabs.length - 1];
+
+              console.log("Popup tab: ", popupTab);
+              
+              if (popupTab) {
+                chrome.tabs.update(popupTab.id, { active: true });
+                chrome.windows.update(popupTab.windowId, { focused: true });
               }
             });
           }
         } catch (error) {
           console.error("Error fetching bookmarks:", error);
-
+          chrome.tabs.query({}, function(tabs) {
+            tabs.forEach(tab => {
+              if (tab.url && (tab.url.includes('x.com/i/bookmarks') || tab.url.includes('twitter.com/i/bookmarks'))) {
+                chrome.tabs.sendMessage(tab.id, { action: "hideLoader" });
+              }
+            });
+          });
         }
       });
     }
@@ -295,4 +312,18 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
   { urls: ["*://x.com/*", "*://twitter.com/*"] },
   ["requestHeaders", "extraHeaders"]
 );
+
+// Add onInstalled handler at the top level of the file
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'install') {
+    chrome.storage.local.get(['wasPopupShown'], (result) => {
+      if (!result.wasPopupShown) {
+        chrome.tabs.create({
+          url: chrome.runtime.getURL('welcome.html')
+        });
+        chrome.storage.local.set({ wasPopupShown: true });
+      }
+    });
+  }
+});
 

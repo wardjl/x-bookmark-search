@@ -11,6 +11,20 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
 
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        // Only handle keyboard navigation when slideshow is visible
+        if (!slideshow.classList.contains('hidden')) {
+            if (e.key === 'ArrowLeft' && currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            } else if (e.key === 'ArrowRight' && currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+    });
+
     const coffeeButton = document.getElementById('coffeeButton');
     coffeeButton.addEventListener('click', function() {
         window.open('https://ko-fi.com/sahillalani', '_blank');
@@ -135,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
-                    'x-magicapi-key': 'your-api-key'
+                    'x-magicapi-key': 'api-key'
                 },
                 body: formData
             });
@@ -221,18 +235,24 @@ document.addEventListener('DOMContentLoaded', function() {
         let authorsList = document.getElementById('authors-list');
         authorsList.innerHTML = '';
 
-        // Only display top 5 authors
         authors.slice(0, 5).forEach((author, index) => {
             const authorElement = document.createElement('div');
             authorElement.className = 'author-item';
             
-            // Get the highest quality profile image by removing '_normal' from the URL
+            // Get the highest quality profile image
             const profileImageUrl = author.profile_image_url.replace('_normal', '');
             
+            // Add special class for top 3
+            const rankClass = index === 0 ? 'gold-rank' : 
+                             index === 1 ? 'silver-rank' : 
+                             index === 2 ? 'bronze-rank' : '';
+            
             authorElement.innerHTML = `
-                <div class="author-position">${index + 1}</div>
-                <img src="${profileImageUrl}" class="author-image" alt="${author.name}'s profile" 
-                     onerror="this.src='default_profile.png'" crossorigin="anonymous">
+                <div class="author-position ${rankClass}">${index + 1}</div>
+                <img src="${profileImageUrl}" class="author-image ${rankClass}" 
+                     alt="${author.name}'s profile" 
+                     onerror="this.src='default_profile.png'" 
+                     crossorigin="anonymous">
                 <div class="author-info">
                     <div class="author-name">${author.name}</div>
                     <div class="author-handle">@${author.screen_name}</div>

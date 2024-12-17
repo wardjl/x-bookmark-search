@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Bookmarks Wrapped",
-  "version": "1.0.0",
-  "description": "Bookmarks Wrapped allows you to get your Twitter Bookmarks wrapped.",
+  "version": "1.0.1",
+  "description": "Spotify wrapped but for Twitter bookmarks.",
   "permissions": [
     "storage",
     "webRequest",
     "activeTab",
-    "scripting"
+    "scripting",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -17,6 +18,18 @@
   "background": {
     "service_worker": "background.js"
   },
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["welcome.html", "instructions.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

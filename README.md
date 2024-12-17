@@ -35,7 +35,7 @@ The project consists of two main components:
 ## Usage
 
 1. Click on the extension icon in your Chrome toolbar
-2. Click "🎁 Wrap My Bookmarks 🎁"
+2. Click "🎁 Wrap Your Bookmarks 🎁"
 3. Enjoy your personalized bookmarks wrapped experience!
 4. Share your stats with friends
 

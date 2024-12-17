@@ -5,17 +5,159 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" href="popup.css">
   <script src="html2canvas.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #1a1f2e;
+      color: white;
+      margin: 0;
+      padding: 40px;
+      min-width: 400px;
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #initial-screen {
+      text-align: center;
+      padding: 2rem;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .title-container {
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      margin: 0;
+      margin-bottom: 16px;
+      background: linear-gradient(45deg, #1DA1F2, #7856ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin: 0;
+      opacity: 0.8;
+      font-weight: 500;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .primary-button {
+      background: linear-gradient(45deg, #1DA1F2, #7856ff);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 30px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .primary-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(29, 161, 242, 0.2);
+    }
+
+    .primary-button:active {
+      transform: translateY(0);
+    }
+
+    .support-button {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      padding: 16px 32px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .support-button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .loader {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-left-color: #1DA1F2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .button-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-left-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    /* Rest of your existing styles for slideshow etc... */
+  </style>
 </head>
 <body>
   <div id="initial-screen">
-    <h1>Bookmarks Wrapped</h1>
-    <h2>Don't sue me Elon</h2>
-    <button id="exportButton" class="primary-button">
-      🎁 Wrap My Bookmarks 🎁
-    </button>
-    <button class="support-button" id="coffeeButton">
-      🍵 Support This Project if I actually get sued by Elon 🍵
-    </button>
+    <div class="title-container">
+      <h1>Bookmarks Wrapped</h1>
+      <div class="surfer-container">
+        <h3 id="surfer-icon">🏄‍♂️</h3>
+        <h3>Built with <a id="surfer-link" href="https://surferprotocol.org" target="_blank">Surfer Protocol</a></h3>
+      </div>
+    </div>
+    <div class="button-container">
+      <button id="exportButton" class="primary-button">
+        🎁 Wrap Your Bookmarks 🎁
+      </button>
+      <button class="support-button" id="coffeeButton">
+        🍵 Support This Project if I actually get sued by Elon 🍵
+      </button>
+    </div>
     <div id="status"></div>
     <div class="loader" id="loader"></div>
   </div>
@@ -62,7 +204,7 @@
         <h2>Your most active bookmarking month was</h2>
         <div class="big-number" id="top-month">JAN</div>
         <div class="month-count">with <span id="month-count">0</span> bookmarks</div>
-        <div class="fun-fact">You were really going through it that month huh</div>
+        <div class="fun-fact">You were really going through nerding out that month huh</div>
       </div>
     </div>
 
@@ -76,7 +218,8 @@
         </div>
         <div class="content-right">
           <div id="final-collage"></div>
-          <button class="share-all-button">Share on Twitter</button>
+          <button class="share-all-button">Share on Twitter (if you dare)</button>
+          <button class="copy-button">Copy to Clipboard</button>
         </div>
       </div>
     </div>

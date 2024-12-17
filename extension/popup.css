@@ -43,6 +43,12 @@ h2 {
   text-align: center;
 }
 
+h3 {
+  font-size: 18px;
+  font-weight: normal;
+  text-align: center;
+}
+
 button {
   padding: 15px 30px;
   margin: 10px;
@@ -236,6 +242,10 @@ button:hover {
   border-radius: 15px;
 }
 
+.author-item:hover {
+  transform: translateX(5px);
+}
+
 .author-info {
   display: flex;
   flex-direction: column;
@@ -406,6 +416,8 @@ button:hover {
   font-size: 20px;
   margin-top: 30px;
   color: #888;
+  text-align: center;
+  width: 100%;
 }
 
 /* Special styling for the final slide with split layout */
@@ -420,7 +432,10 @@ button:hover {
 
 #outro-slide .content-left {
   flex: 0.4;  
-  text-align: left;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #outro-slide .content-right {
@@ -428,26 +443,48 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 #final-collage {
   width: 100%;
-  max-width: 800px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin: 0 auto;
-  padding: 20px;
 }
 
 #final-collage img {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
   border-radius: 15px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+  animation: shadowPulse 4s ease infinite;
+}
+
+@keyframes shadowPulse {
+  0% {
+    box-shadow: 0 12px 36px rgba(0, 172, 238, 0.4); /* #00acee */
+  }
+  25% {
+    box-shadow: 0 12px 36px rgba(29, 161, 242, 0.4); /* #1da1f2 */
+  }
+  50% {
+    box-shadow: 0 12px 36px rgba(0, 132, 180, 0.4); /* #0084b4 */
+  }
+  75% {
+    box-shadow: 0 12px 36px rgba(0, 172, 237, 0.4); /* #00aced */
+  }
+  100% {
+    box-shadow: 0 12px 36px rgba(0, 172, 238, 0.4); /* back to #00acee */
+  }
 }
 
 .share-all-button {
   background: linear-gradient(45deg, #00acee, #1da1f2, #0084b4, #00aced);
   background-size: 300% 300%;
-  animation: gradient 4s ease infinite;
+  animation: gradient 4s ease infinite, bounce 1s ease-in-out infinite;
   color: white;
   font-size: 18px;
   font-weight: bold;
@@ -466,8 +503,8 @@ button:hover {
 }
 
 .share-all-button:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(29, 161, 242, 0.6);
+  filter: brightness(1.1);
 }
 
 .share-all-button:active {
@@ -495,7 +532,55 @@ button:hover {
   }
 }
 
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 #status {
   margin-top: 20px;
   text-align: center;
+}
+
+/* Add medal styling for top 3 */
+.author-image.gold-rank {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    border: 3px solid #FFD700;
+}
+
+.author-image.silver-rank {
+    box-shadow: 0 0 15px rgba(192, 192, 192, 0.6);
+    border: 3px solid #C0C0C0;
+}
+
+.author-image.bronze-rank {
+  box-shadow: 0 0 15px rgba(205, 127, 50, 0.6);
+  border: 3px solid #CD7F32;
+}
+
+#surfer-icon {
+  margin-right: 2px;
+}
+
+#surfer-link {
+  color: #1da1f2; /* Twitter blue */
+}
+
+#surfer-link:hover {
+  color: #1991da; /* Slightly darker Twitter blue for hover */
+}
+
+.surfer-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+#surfer-icon {
+  margin-right: 6px; /* Remove the previous margin-right */
 }
