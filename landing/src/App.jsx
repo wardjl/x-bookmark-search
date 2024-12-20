@@ -10,6 +10,20 @@ export default function App() {
   <p className="text-xl text-gray-300 mb-8">
     Spotify wrapped for Twitter bookmarks.
   </p>
+  <div className="flex justify-center mb-8">
+    <a 
+      href="https://www.producthunt.com/posts/bookmarks-wrapped?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-bookmarks&#0045;wrapped" 
+      target="_blank"
+    >
+      <img 
+        src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=710272&theme=light" 
+        alt="Bookmarks Wrapped - Spotify wrapped for Twitter Bookmarks | Product Hunt" 
+        style={{ width: '250px', height: '54px' }}
+        width="250" 
+        height="54" 
+      />
+    </a>
+  </div>
   <a 
     href="https://chromewebstore.google.com/detail/bookmarks-wrapped/kbfpieehoalhenikobakdhoddpciione" 
     target="_blank"
