@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bookmarks Wrapped",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Spotify wrapped but for Twitter Bookmarks.",
   "permissions": [
     "storage",

@@ -8,7 +8,7 @@ export default function App() {
     Bookmarks Wrapped 
   </h1>
   <p className="text-xl text-gray-300 mb-8">
-    Spotify wrapped but for Twitter bookmarks.
+    Spotify wrapped for Twitter bookmarks.
   </p>
   <a 
     href="https://chromewebstore.google.com/detail/bookmarks-wrapped/kbfpieehoalhenikobakdhoddpciione" 
