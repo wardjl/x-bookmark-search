@@ -1,14 +1,14 @@
 # Bookmarks Wrapped
 
-Bookmarks Wrapped is a Chrome extension that generates your Twitter/X bookmarks wrapped experience, similar to Spotify Wrapped. See your top bookmarked accounts, reading time stats, and monthly trends in a beautiful presentation.
+Bookmarks Wrapped is a Chrome extension similar to Spotify Wrapped. See your top bookmarked accounts, reading time stats, and monthly trends in a beautiful presentation.
 
 ## Features
 
-- View your 2024 Twitter/X bookmarks statistics in an engaging slideshow format
+- View your 2024 Twitter bookmarks statistics in an engaging slideshow format
 - See your top bookmarked accounts
 - Track your reading time and monthly bookmarking trends
 - Beautiful, interactive UI with smooth transitions
-- Export and share your stats
+- Share your stats with friends
 - Privacy-focused: all processing happens locally in your browser
 
 ## Project Structure
