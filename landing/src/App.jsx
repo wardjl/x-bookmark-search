@@ -4,8 +4,8 @@ export default function App() {
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
-  <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text animate-gradient">
-    Bookmarks Wrapped
+  <h1 className="text-6xl font-bold mb-4 bg-[#1da1f2] text-transparent bg-clip-text animate-gradient">
+    Bookmarks Wrapped 
   </h1>
   <p className="text-xl text-gray-300 mb-8">
     Spotify wrapped but for Twitter bookmarks.
@@ -13,12 +13,13 @@ export default function App() {
   <a 
     href="https://chromewebstore.google.com/detail/bookmarks-wrapped/kbfpieehoalhenikobakdhoddpciione" 
     target="_blank"
-    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:bg-blue-600 hover:scale-105 rounded-full font-semibold text-2xl transition-all animate-bounce-subtle mb-4" // Added mb-4 here
+    className="inline-flex items-center px-8 py-3 bg-[#1da1f2] hover:bg-blue-600 rounded-full font-semibold text-2xl transition-all animate-bounce-subtle mb-4"
   >
     <span className="mr-2">🚀</span>
     Get Started
+    <span className="ml-2">🚀</span>
   </a>
-  <div className="text-sm text-gray-400 mt-2"> {/* Changed margin to mt-2 */}
+  <div className="text-md text-gray-400 mt-2"> {/* Changed margin to mt-2 */}
     <span className="mr-2 animate-bounce-slow">🏄‍♂️</span>
     Built with <a 
       href="https://surferprotocol.org" 

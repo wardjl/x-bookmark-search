@@ -131,8 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const imageWrapper = document.createElement('div');
             imageWrapper.className = 'preview-image-wrapper';
             
+            // Create watermarked version of the image
             const image = document.createElement('img');
-            image.src = screenshots[previewSlides[0]];
+            image.src = await addWatermark(screenshots[previewSlides[0]]);
             image.className = 'preview-image';
             
             imageWrapper.appendChild(image);
@@ -145,8 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
             collageContainer.innerHTML = '';
             collageContainer.appendChild(container);
             
-            // Store the current image data for sharing
-            collageContainer.dataset.shareUrl = screenshots[previewSlides[currentPreviewIndex]];
+            // Store the watermarked image for sharing
+            collageContainer.dataset.shareUrl = await addWatermark(screenshots[previewSlides[currentPreviewIndex]]);
             
         } catch (error) {
             console.error('Error creating display:', error);
@@ -154,14 +155,55 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function showPreviewSlide(index) {
+    async function addWatermark(imageDataUrl) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size to match image
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw the original image
+                ctx.drawImage(img, 0, 0);
+                
+                // Add watermark text
+                ctx.font = '18px Inter, sans-serif';  // Increased font size
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';  // Slightly more opaque
+                
+                // Text to display
+                const text = 'Try it out at https://elondontsueme.com';
+                
+                // Get text metrics
+                const metrics = ctx.measureText(text);
+                
+                // Position text at bottom center
+                const padding = 15;  // Increased padding
+                const x = (canvas.width - metrics.width) / 2;  // Center horizontally
+                const y = canvas.height - padding;
+                
+                // Draw text
+                ctx.fillText(text, x, y);
+                
+                // Convert back to data URL
+                resolve(canvas.toDataURL('image/png', 1.0));
+            };
+            img.onerror = reject;
+            img.src = imageDataUrl;
+        });
+    }
+
+    async function showPreviewSlide(index) {
         currentPreviewIndex = index;
         const container = document.getElementById('final-collage');
         const image = container.querySelector('.preview-image');
         const dots = container.querySelectorAll('.preview-dot');
         
-        image.src = screenshots[previewSlides[index]];
-        container.dataset.shareUrl = screenshots[previewSlides[index]];
+        // Update image with watermark
+        image.src = await addWatermark(screenshots[previewSlides[index]]);
+        container.dataset.shareUrl = await addWatermark(screenshots[previewSlides[index]]);
         
         dots.forEach((dot, i) => {
             dot.classList.toggle('active', i === index);
@@ -224,8 +266,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 Image Copied!
             `;
             
-            // Show share options
-            shareOptions.style.display = 'block';
             
             // Reset button after delay
             setTimeout(() => {
@@ -250,11 +290,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('share-imessage').addEventListener('click', () => {
-        window.open('sms:', '_blank');
+        const tweetText = `Check out my 2024 Bookmarks Wrapped!\n\n[PASTE-IMAGE-HERE]`;
+        window.open(`sms:?body=${encodeURIComponent(tweetText)}`, '_blank');
     });
 
     document.getElementById('share-whatsapp').addEventListener('click', () => {
-        const text = 'Check out my 2024 Bookmarks Wrapped!';
+        const text = 'Check out my 2024 Bookmarks Wrapped!\n\n[PASTE-IMAGE-HERE]';
         window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
     });
 
@@ -412,30 +453,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show first slide
             currentSlide = 0;
             showSlide(currentSlide);
-
-            // Use event delegation for share buttons
-            // document.getElementById('slideshow').addEventListener('click', (e) => {
-            //     if (e.target.classList.contains('share-button')) {
-            //         const slide = e.target.closest('.slide');
-            //         const slideId = slide.id;
-            //         const button = e.target;
-            //         const originalText = button.textContent;
-            //         button.innerHTML = `
-            //             <span class="button-spinner"></span>
-            //             <span>🤦 told you not to share</span>
-            //         `;
-            //         const shareStats = {
-            //             totalBookmarks: tweets.length,
-            //             topAuthors: topAuthors,
-            //             minutes: readingStats.minutes,
-            //             elonPuffs: Math.floor(readingStats.minutes / 2.38),
-            //             topMonth: monthlyStats.month,
-            //             monthCount: monthlyStats.count
-            //         };
-
-            //         shareTweet(slideId, shareStats, button);
-            //     }
-            // });
         }
     });
 

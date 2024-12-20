@@ -146,39 +146,6 @@ button:hover {
   color: #1da1f2;
 }
 
-.share-button {
-  background: linear-gradient(-45deg, #ff3366, #ff6b6b, #4ecdc4, #45b7d1);
-  background-size: 400% 400%;
-  animation: gradient 3s ease infinite, pulse 2s infinite;
-  border: none;
-  border-radius: 25px;
-  color: white;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  margin: 20px 0;
-}
-
-.share-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
 .navigation {
   position: absolute;
   bottom: -35px;
@@ -240,10 +207,6 @@ button:hover {
   padding: 10px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 15px;
-}
-
-.author-item:hover {
-  transform: translateX(5px);
 }
 
 .author-info {
@@ -463,63 +426,22 @@ button:hover {
 
 @keyframes shadowPulse {
   0% {
-    box-shadow: 0 12px 36px rgba(0, 172, 238, 0.4); /* #00acee */
+    box-shadow: 0 24px 72px rgba(0, 172, 238, 0.4); /* #00acee */
   }
   25% {
-    box-shadow: 0 12px 36px rgba(29, 161, 242, 0.4); /* #1da1f2 */
+    box-shadow: 0 24px 72px rgba(29, 161, 242, 0.4); /* #1da1f2 */
   }
   50% {
-    box-shadow: 0 12px 36px rgba(0, 132, 180, 0.4); /* #0084b4 */
+    box-shadow: 0 24px 72px rgba(0, 132, 180, 0.4); /* #0084b4 */
   }
   75% {
-    box-shadow: 0 12px 36px rgba(0, 172, 237, 0.4); /* #00aced */
+    box-shadow: 0 24px 72px rgba(0, 172, 237, 0.4); /* #00aced */
   }
   100% {
-    box-shadow: 0 12px 36px rgba(0, 172, 238, 0.4); /* back to #00acee */
+    box-shadow: 0 24px 72px rgba(0, 172, 238, 0.4); /* back to #00acee */
   }
 }
 
-.share-all-button {
-  background: linear-gradient(45deg, #00acee, #1da1f2, #0084b4, #00aced);
-  background-size: 300% 300%;
-  animation: gradient 4s ease infinite, bounce 1s ease-in-out infinite;
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
-  padding: 15px 40px;
-  border-radius: 30px;
-  border: none;
-  cursor: pointer;
-  margin-top: 30px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(29, 161, 242, 0.4);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  position: relative;
-  overflow: hidden;
-}
-
-.share-all-button:hover {
-  box-shadow: 0 6px 20px rgba(29, 161, 242, 0.6);
-  filter: brightness(1.1);
-}
-
-.share-all-button:active {
-  transform: translateY(1px);
-}
-
-.share-all-button::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: rgba(255, 255, 255, 0.1);
-  transform: rotate(45deg);
-  animation: shine 3s infinite;
-}
 
 @keyframes shine {
   0% {
