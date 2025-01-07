@@ -12,135 +12,121 @@ let isDone = false;
 let not2024count = 0;
 
 const getBookmarks = async (cursor = "", totalImported = 0, allTweets = []) => {
-  chrome.storage.local.get(
-    ["cookie", "csrf", "auth"],
-    async (sessionResult) => {
-      if (
-        !sessionResult.cookie ||
-        !sessionResult.csrf ||
-        !sessionResult.auth
-      ) {
-        console.error("cookie, csrf, or auth is missing");
-        return;
-      } 
-
-      chrome.storage.local.get(["bookmarksApiId", "features"], async (localResult) => {
-        if (!localResult.bookmarksApiId || !localResult.features) {
-          return;
-        }
-
-        const headers = new Headers();
-        headers.append("Cookie", sessionResult.cookie);
-        headers.append("X-Csrf-token", sessionResult.csrf);
-        headers.append("Authorization", sessionResult.auth);
-
-        const variables = {
-          count: 100,
-          cursor: cursor,
-          includePromotedContent: false,
-        };
-        const API_URL = `https://x.com/i/api/graphql/${
-          localResult.bookmarksApiId
-        }/Bookmarks?features=${encodeURIComponent(
-          JSON.stringify(localResult.features)
-        )}&variables=${encodeURIComponent(JSON.stringify(variables))}`;
-
-        console.log("API_URL", API_URL);
-
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(
+      ["cookie", "csrf", "auth", "bookmarksApiId", "features"],
+      async (result) => {
         try {
+          if (!result.cookie || !result.csrf || !result.auth || !result.bookmarksApiId || !result.features) {
+            console.log("Missing required data:", {
+              cookie: !!result.cookie,
+              csrf: !!result.csrf,
+              auth: !!result.auth,
+              bookmarksApiId: !!result.bookmarksApiId,
+              features: !!result.features
+            });
+            reject(new Error("Missing required data"));
+            return;
+          }
+
+          const headers = new Headers();
+          headers.append("Cookie", result.cookie);
+          headers.append("X-Csrf-token", result.csrf);
+          headers.append("Authorization", result.auth);
+
+          const variables = {
+            count: 100,
+            cursor: cursor,
+            includePromotedContent: false,
+          };
+
+          const API_URL = `https://x.com/i/api/graphql/${
+            result.bookmarksApiId
+          }/Bookmarks?features=${encodeURIComponent(
+            JSON.stringify(result.features)
+          )}&variables=${encodeURIComponent(JSON.stringify(variables))}`;
+
+          console.log("Fetching bookmarks from:", API_URL);
+
           const response = await fetch(API_URL, {
             method: "GET",
             headers: headers,
-            redirect: "follow",
+            credentials: 'include'
           });
 
           if (!response.ok) {
+            console.error("API error:", response.status);
+            if (response.status === 429) {
+              console.log("Rate limited, waiting 60s before retry...");
+              await new Promise(resolve => setTimeout(resolve, 60000));
+              const retryResult = await getBookmarks(cursor, totalImported, allTweets);
+              resolve(retryResult);
+              return;
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const data = await response.json();
-          const entries =
-            data.data?.bookmark_timeline_v2?.timeline?.instructions?.[0]
-              ?.entries || [];
-          
-          const tweetEntries = entries.filter((entry) =>
-            entry.entryId.startsWith("tweet-")
-          );
+          console.log("Received data:", data);
 
+          const entries = data.data?.bookmark_timeline_v2?.timeline?.instructions?.[0]?.entries || [];
+          const tweetEntries = entries.filter(entry => entry.entryId.startsWith("tweet-"));
           const parsedTweets = tweetEntries.map(parseTweet);
-          console.log("Parsed Tweets", parsedTweets);
-          for (const tweet of parsedTweets) {
-            if (getTweetYear(tweet.timestamp) !== 2024) {
-              console.log("Year is not 2024, stopping import");
-              not2024count++;
-              if (not2024count > 10) {
-                isDone = true;
-                break;
-              }
-            }
-            else {
-              not2024count = 0;
-              allTweets.push(tweet);
-            }
-          }
-          
-          const newTweetsCount = parsedTweets.length;
-          totalImported += newTweetsCount;
 
-          console.log("Bookmarks data:", data);
-          console.log("New tweets in this batch:", newTweetsCount);
-          console.log("Current total imported:", totalImported);
+          allTweets.push(...parsedTweets);
+          
+          // Store tweets in chunks to avoid storage limits
+          const lastUpdateTime = new Date().toISOString();
+          const tweetChunks = [];
+          for (let i = 0; i < allTweets.length; i += 100) {
+            tweetChunks.push({
+              tweets: allTweets.slice(i, i + 100),
+              chunkIndex: Math.floor(i / 100),
+              totalChunks: Math.ceil(allTweets.length / 100),
+              lastUpdated: lastUpdateTime
+            });
+          }
+
+          // Store each chunk
+          for (const chunk of tweetChunks) {
+            await new Promise((resolve) => {
+              chrome.storage.local.set({
+                [`bookmarked_tweets_${chunk.chunkIndex}`]: chunk
+              }, resolve);
+            });
+          }
+
+          // Store metadata
+          await new Promise((resolve) => {
+            chrome.storage.local.set({
+              bookmarked_tweets_meta: {
+                totalTweets: allTweets.length,
+                totalChunks: tweetChunks.length,
+                lastUpdated: lastUpdateTime
+              }
+            }, resolve);
+          });
+
+          console.log(`Stored ${allTweets.length} tweets in ${tweetChunks.length} chunks`);
 
           const nextCursor = getNextCursor(entries);
-
-          if (nextCursor && newTweetsCount > 0 && !isDone) {
-            await getBookmarks(nextCursor, totalImported, allTweets);
+          if (nextCursor && parsedTweets.length > 0) {
+            // Add delay between requests
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result = await getBookmarks(nextCursor, totalImported + parsedTweets.length, allTweets);
+            resolve(result);
           } else {
-            console.log("Import completed. Total imported:", totalImported);
-            console.log("All imported tweets:", allTweets);
-            
-            chrome.tabs.query({}, function(tabs) {
-              tabs.forEach(tab => {
-                if (tab.url && (tab.url.includes('x.com/i/bookmarks') || tab.url.includes('twitter.com/i/bookmarks'))) {
-                  chrome.tabs.sendMessage(tab.id, { action: "hideLoader" });
-                }
-              });
-            });
-            
-            chrome.runtime.sendMessage({
-              action: "tweetsReady",
-              tweets: allTweets
-            });
-            
-            chrome.tabs.query({}, function(tabs) {
-              const popupTabs = tabs.filter(tab => 
-                !tab.url && !tab.title
-              );
-
-              const popupTab = popupTabs[popupTabs.length - 1];
-
-              console.log("Popup tab: ", popupTab);
-              
-              if (popupTab) {
-                chrome.tabs.update(popupTab.id, { active: true });
-                chrome.windows.update(popupTab.windowId, { focused: true });
-              }
-            });
+            console.log("Completed fetching bookmarks. Total:", allTweets.length);
+            resolve(allTweets);
           }
         } catch (error) {
-          console.error("Error fetching bookmarks:", error);
-          chrome.tabs.query({}, function(tabs) {
-            tabs.forEach(tab => {
-              if (tab.url && (tab.url.includes('x.com/i/bookmarks') || tab.url.includes('twitter.com/i/bookmarks'))) {
-                chrome.tabs.sendMessage(tab.id, { action: "hideLoader" });
-              }
-            });
-          });
+          console.error("Error in getBookmarks:", error);
+          reject(error);
         }
-      });
-    }
-  );
-}
+      }
+    );
+  });
+};
 
 const parseTweet = (entry) => {
   const tweet = entry.content?.itemContent?.tweet_results?.result?.tweet || entry.content?.itemContent?.tweet_results?.result;
@@ -198,14 +184,37 @@ const getNextCursor = (entries) => {
 };
 
 const waitForRequiredData = () => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    let retryCount = 0;
+    const maxRetries = 50; // 5 seconds total (50 * 100ms)
+    
     const checkData = () => {
-      chrome.storage.local.get(['bookmarksApiId', 'cookie', 'csrf', 'auth'], (result) => {
-        if (result.bookmarksApiId && result.cookie && result.csrf && result.auth) {
-          console.log('Got all data needed to fetch bookmarks, going to getBookmarks');
+      chrome.storage.local.get(['bookmarksApiId', 'cookie', 'csrf', 'auth', 'features'], (result) => {
+        console.log('Checking required data:', {
+          hasBookmarksApiId: !!result.bookmarksApiId,
+          hasCookie: !!result.cookie,
+          hasCsrf: !!result.csrf,
+          hasAuth: !!result.auth,
+          hasFeatures: !!result.features
+        });
+        
+        if (result.bookmarksApiId && result.cookie && result.csrf && result.auth && result.features) {
+          console.log('All required data present:', {
+            bookmarksApiId: result.bookmarksApiId,
+            cookieLength: result.cookie.length,
+            csrfLength: result.csrf.length,
+            authLength: result.auth.length
+          });
           resolve();
         } else {
-          setTimeout(checkData, 100); // Check again after 100ms
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            console.log('Timed out waiting for required data');
+            reject(new Error('Timed out waiting for required data. Please try refreshing the page.'));
+            return;
+          }
+          console.log('Missing required data, retrying in 100ms');
+          setTimeout(checkData, 100);
         }
       });
     };
@@ -215,19 +224,53 @@ const waitForRequiredData = () => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "exportBookmarks") {
+    console.log("Starting bookmark export");
+    
+    // Reset global state
+    isDone = false;
+    not2024count = 0;
+    
     chrome.tabs.create({ url: "https://x.com/i/bookmarks/all" }, (newTab) => {
-      setTimeout(() => {
-        chrome.tabs.sendMessage(newTab.id, {action: "showLoader"});
-      }, 1000);
+      setTimeout(async () => {
+        try {
+          chrome.tabs.sendMessage(newTab.id, { action: "showLoader" });
+          
+          await waitForRequiredData();
+          console.log("Required data received, starting fetch");
+          
+          const tweets = await getBookmarks();
+          console.log("Fetched tweets:", tweets?.length);
+          
+          chrome.tabs.sendMessage(newTab.id, { action: "hideLoader" });
+          
+          if (tweets && tweets.length > 0) {
+            // Send tweets to popup and wait for confirmation
+            chrome.runtime.sendMessage({
+              action: "tweetsReady",
+              tweets: tweets
+            }, (response) => {
+              // Only close the tab after popup confirms receipt
+              if (response && response.status === "received") {
+                chrome.tabs.remove(newTab.id);
+              }
+            });
+          } else {
+            // If no tweets, show error and keep tab open
+            chrome.tabs.sendMessage(newTab.id, { 
+              action: "hideLoader",
+              error: "No tweets found from 2024. Try bookmarking some tweets first!" 
+            });
+          }
+        } catch (error) {
+          console.error("Export error:", error);
+          chrome.tabs.sendMessage(newTab.id, { 
+            action: "hideLoader",
+            error: error.message 
+          });
+        }
+      }, 2000);
     });
     
-    console.log("Received export request from popup");
-
-    waitForRequiredData().then(() => {
-      getBookmarks();
-      sendResponse({ status: "started" });
-    });
-
     return true;
   }
   
@@ -254,63 +297,56 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
   (details) => {
-    if (
-      !(details.url.includes("x.com") || details.url.includes("twitter.com"))
-    ) {
+    if (!(details.url.includes("x.com") || details.url.includes("twitter.com"))) {
       return;
     }
 
+    console.log("Intercepted request:", details.url);
 
-    // Check if stuff is already stored
-    chrome.storage.local.get(["bookmarksApiId", "cookie", "csrf", "auth", "features"], (result) => {
-      // Check if the URL matches the pattern for bookmarks API
-      const bookmarksUrlPattern = /https:\/\/x\.com\/i\/api\/graphql\/([^/]+)\/Bookmarks\?/;
-      const match = details.url.match(bookmarksUrlPattern);
+    const authHeader = details.requestHeaders?.find(
+      (header) => header.name.toLowerCase() === "authorization"
+    );
+    const cookieHeader = details.requestHeaders?.find(
+      (header) => header.name.toLowerCase() === "cookie"
+    );
+    const csrfHeader = details.requestHeaders?.find(
+      (header) => header.name.toLowerCase() === "x-csrf-token"
+    );
 
-      if (match) {
-        if (!result.bookmarksApiId) {
-          const bookmarksApiId = match[1];
-          chrome.storage.local.set({ bookmarksApiId }, () => {
-            console.log(`Stored bookmarksApiId: ${bookmarksApiId}`);
+    if (authHeader && cookieHeader && csrfHeader) {
+      console.log("Found all required headers");
+      chrome.storage.local.set({
+        auth: authHeader.value,
+        cookie: cookieHeader.value,
+        csrf: csrfHeader.value
+      }, () => {
+        console.log("Stored auth data in local storage");
+      });
+    }
+
+    // Extract bookmarksApiId and features from Bookmarks API request
+    if (details.url.includes("/graphql/") && details.url.includes("/Bookmarks?")) {
+      try {
+        // Extract bookmarksApiId from URL
+        const bookmarksApiId = details.url.split("/graphql/")[1].split("/Bookmarks?")[0];
+        
+        // Extract features from URL
+        const url = new URL(details.url);
+        const features = url.searchParams.get("features");
+        
+        if (bookmarksApiId && features) {
+          console.log("Found Bookmarks API data:", { bookmarksApiId });
+          chrome.storage.local.set({
+            bookmarksApiId,
+            features: JSON.parse(decodeURIComponent(features))
+          }, () => {
+            console.log("Stored Bookmarks API data in local storage");
           });
         }
-
-        if (!result.features) {
-          const url = new URL(details.url);
-          const features = JSON.parse(decodeURIComponent(url.searchParams.get('features') || '{}'));
-          chrome.storage.local.set({ features }, () => {
-            console.log("Stored features: ", features);
-          });
-        }
+      } catch (error) {
+        console.error("Error extracting Bookmarks API data:", error);
       }
-
-
-
-      const authHeader = details.requestHeaders?.find(
-        (header) => header.name.toLowerCase() === "authorization"
-      );
-      const auth = authHeader ? authHeader.value : "";
-
-      const cookieHeader = details.requestHeaders?.find(
-        (header) => header.name.toLowerCase() === "cookie"
-      );
-      const cookie = cookieHeader ? cookieHeader.value : "";
-
-      const csrfHeader = details.requestHeaders?.find(
-        (header) => header.name.toLowerCase() === "x-csrf-token"
-      );
-      const csrf = csrfHeader ? csrfHeader.value : "";
-
-      if (!auth || !cookie || !csrf) {
-        return;
-      }
-
-      if (result.cookie !== cookie || result.csrf !== csrf || result.auth !== auth) {
-        chrome.storage.local.set({ cookie, csrf, auth }, () => {
-          console.log("Updated cookie, csrf, auth in local storage");
-        });
-      }
-    });
+    }
   },
   { urls: ["*://x.com/*", "*://twitter.com/*"] },
   ["requestHeaders", "extraHeaders"]

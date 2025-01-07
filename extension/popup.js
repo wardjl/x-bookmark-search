@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    chrome.runtime.onMessage.addListener((message) => {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === "tweetsReady") {
             // Hide loader and initial screen
             loader.style.display = 'none';
@@ -449,10 +449,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     showSlide(currentSlide);
                 });
             });
-            
-            // Show first slide
-            currentSlide = 0;
-            showSlide(currentSlide);
+
+            // Send confirmation that tweets were received
+            sendResponse({ status: "received" });
         }
     });
 

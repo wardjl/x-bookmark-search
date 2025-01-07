@@ -1,32 +1,36 @@
-chrome.runtime.onMessage.addListener(
-    async function(request, sender, sendResponse) {
-        if (request.action === "screenshot") {
-            try {
-                const slideContent = document.querySelector('.slide-content');
-                if (!slideContent) {
-                    sendResponse({error: "No slide content found"});
-                    return;
-                }
+console.log("Content script loaded");
 
-                const canvas = await html2canvas(slideContent, {
-                    backgroundColor: '#1a1f2e',
-                    scale: 2, // Higher resolution
-                    logging: false
-                });
-                
-                const dataURL = canvas.toDataURL("image/png", 1.0);
-                sendResponse({imageData: dataURL});
-            } catch (error) {
-                console.error('Screenshot error:', error);
-                sendResponse({error: error.message});
-            }
-        }
-        return true; // Keep the message channel open
+// Listen for messages
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Content script received message:", message);
+  
+  if (message.action === "showLoader") {
+    console.log("Showing loader");
+    createLoadingIndicator();
+    sendResponse({ status: "loader shown" });
+  }
+  
+  if (message.action === "hideLoader") {
+    console.log("Hiding loader");
+    const loader = document.getElementById('bookmarks-wrapped-loader');
+    if (loader) {
+      loader.remove();
     }
-);
+    sendResponse({ status: "loader hidden" });
+  }
+  
+  return true; // Keep the message channel open
+});
 
-// Create and inject the loading indicator
 function createLoadingIndicator() {
+  console.log("Creating loading indicator");
+  
+  // Remove existing loader if any
+  const existingLoader = document.getElementById('bookmarks-wrapped-loader');
+  if (existingLoader) {
+    existingLoader.remove();
+  }
+
   const loadingDiv = document.createElement('div');
   loadingDiv.id = 'bookmarks-wrapped-loader';
   loadingDiv.style.cssText = `
@@ -71,27 +75,12 @@ function createLoadingIndicator() {
   loadingDiv.appendChild(spinner);
   loadingDiv.appendChild(text);
   document.body.appendChild(loadingDiv);
+  
+  console.log("Loading indicator created and added to page");
 }
 
-// Function to remove the loading indicator
-function removeLoadingIndicator() {
-  const loader = document.getElementById('bookmarks-wrapped-loader');
-  if (loader) {
-    loader.remove();
-  }
-}
-
-// Listen for the hideLoader message
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "hideLoader") {
-    removeLoadingIndicator();
-  }
-});
-
-// Only create the loading indicator if we're on the bookmarks page
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "showLoader") {
-    createLoadingIndicator();
-  }
+// Add this to verify the script is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Content script DOM ready');
 });
 
