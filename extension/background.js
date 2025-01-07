@@ -1,6 +1,33 @@
 chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.create({
-    url: 'popup.html'
+    url: chrome.runtime.getURL('welcome.html')
+  }, async (newTab) => {
+    try {
+      await waitForRequiredData();
+      console.log("Required data received, starting fetch");
+      
+      const tweets = await getBookmarks();
+      console.log("Fetched tweets:", tweets?.length);
+      
+      if (tweets && tweets.length > 0) {
+        // Store the tweets and update the UI
+        chrome.runtime.sendMessage({
+          action: "bookmarksImported",
+          count: tweets.length
+        });
+      } else {
+        chrome.runtime.sendMessage({ 
+          action: "importError",
+          error: "No bookmarks found. Try bookmarking some tweets first!" 
+        });
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      chrome.runtime.sendMessage({ 
+        action: "importError",
+        error: error.message 
+      });
+    }
   });
 });
 
@@ -164,9 +191,12 @@ const parseTweet = (entry) => {
   };
 
   const author = tweet?.core?.user_results?.result?.legacy || {};
+  const tweetId = tweet?.legacy?.id_str || entry.entryId.split('-')[1];
+  const url = `https://twitter.com/${author.screen_name}/status/${tweetId}`;
 
   return {
     id: entry.entryId,
+    url: url,
     full_text: tweet?.legacy?.full_text,
     timestamp: tweet?.legacy?.created_at,
     media: getMediaInfo(media),

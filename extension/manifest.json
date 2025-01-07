@@ -16,7 +16,7 @@
     "https://elondontsueme.com/*"
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_title": "Twitter Bookmark Search"
   },
   "background": {
     "service_worker": "background.js",
@@ -30,7 +30,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["welcome.html", "instructions.png"],
+      "resources": ["welcome.html", "welcome.js", "instructions.png"],
       "matches": ["https://x.com/*", "https://twitter.com/*", "https://localhost:5173/*", "https://elondontsueme.com/*"]
     }
   ],
@@ -40,5 +40,8 @@
       "js": ["content.js"],
       "run_at": "document_end"
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }

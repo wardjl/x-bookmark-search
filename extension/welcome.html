@@ -1,77 +1,185 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Welcome to Bookmarks Wrapped!</title>
+  <title>Twitter Bookmark Search</title>
   <meta charset="UTF-8">
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #1a1f2e;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    .welcome-container {
-      text-align: center;
-      padding: 2rem;
-      max-width: 600px;
-      position: relative;
+    .relative { position: relative; }
+    .min-h-screen { min-height: 100vh; }
+    .bg-black { background-color: black; }
+    .overflow-hidden { overflow: hidden; }
+    .absolute { position: absolute; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .opacity-70 { opacity: 0.7; }
+    .mix-blend-overlay { mix-blend-mode: overlay; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .flex-1 { flex: 1; }
+    .container { width: 100%; max-width: 1200px; margin: 0 auto; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-16 { padding-top: 4rem; padding-bottom: 4rem; }
+    .mb-12 { margin-bottom: 3rem; }
+    .text-center { text-align: center; }
+    .text-6xl { font-size: 3.75rem; }
+    .font-bold { font-weight: 700; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .text-white { color: white; }
+    .mt-4 { margin-top: 1rem; }
+    .text-base { font-size: 1rem; }
+    .max-w-2xl { max-width: 42rem; }
+    .relative { position: relative; }
+    .h-14 { height: 3.5rem; }
+    .w-full { width: 100%; }
+    .rounded-full { border-radius: 9999px; }
+    .pl-12 { padding-left: 3rem; }
+    .pr-6 { padding-right: 1.5rem; }
+    .text-lg { font-size: 1.125rem; }
+    .mt-8 { margin-top: 2rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .p-4 { padding: 1rem; }
+    .w-5 { width: 1.25rem; }
+    .h-5 { height: 1.25rem; }
+    .footer { width: 100%; padding: 1rem 0; text-align: center; }
+    .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); }
+    
+    /* Background styles */
+    .bg-gradient {
+      background: 
+        radial-gradient(ellipse 100% 100% at 50% 150%, rgba(255,255,255,0.2), transparent),
+        radial-gradient(ellipse 50% 50% at 20% 150%, rgba(255,255,255,0.15), transparent),
+        radial-gradient(ellipse 50% 50% at 80% 150%, rgba(255,255,255,0.15), transparent);
     }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
+    
+    .noise-overlay {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.8'/%3E%3C/svg%3E");
+      background-repeat: repeat;
     }
-    p {
-      font-size: 1.2rem;
-      line-height: 1.6;
+
+    /* Input styles */
+    .search-input {
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      transition: all 0.2s;
+    }
+    .search-input:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    .search-input:focus {
+      background-color: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.2);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+    }
+    .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Status message styles */
+    .status-message {
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      background-color: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Button styles */
+    .import-button {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-size: 1.125rem;
+      cursor: pointer;
+      transition: all 0.2s;
       margin-bottom: 2rem;
     }
-    .instructions-image {
-      width: 100%;
-      max-width: 500px;
-      height: auto;
-      border-radius: 10px;
-      margin: 20px 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    .import-button:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
     }
-    .arrow {
-      position: fixed;
-      top: 20px;
-      right: 100px;
-      width: 100px;
-      height: 100px;
+    .import-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
-    .arrow svg {
-      width: 100%;
-      height: 100%;
-      animation: bounce 2s infinite;
+    .button-spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+      vertical-align: middle;
     }
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
-      }
-      40% {
-        transform: translateY(-30px);
-      }
-      60% {
-        transform: translateY(-15px);
-      }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <div class="welcome-container">
-    <h1>🎁 Welcome to Bookmarks Wrapped! 🎁</h1>
-    <p>To get started, click the Bookmarks Wrapped icon in your browser's toolbar (look up there ↗️)</p>
-    <img src="instructions.png" alt="Extension access instructions" class="instructions-image">
-    <div class="arrow">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-        <path d="M7 17L17 7M17 7H7M17 7V17" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+  <div class="relative min-h-screen bg-black overflow-hidden">
+    <div class="absolute inset-0 bg-gradient"></div>
+    <div class="absolute inset-0 opacity-70 mix-blend-overlay noise-overlay"></div>
+    
+    <div class="relative flex min-h-screen flex-col">
+      <main class="flex-1">
+        <div class="container mx-auto px-4 py-16">
+          <div class="mb-12 text-center">
+            <h1 class="text-6xl font-bold tracking-tight text-white">
+              Search Your Twitter Bookmarks
+            </h1>
+            <p class="mt-4 text-base text-white/60" id="status-text">
+              Click the button below to import your bookmarks
+            </p>
+            <button id="import-button" class="import-button mt-8">
+              Import Bookmarks
+            </button>
+          </div>
+
+          <div class="mx-auto max-w-2xl">
+            <div class="relative">
+              <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="search"
+                placeholder="Search your bookmarks..."
+                id="search-input"
+                class="search-input h-14 w-full rounded-full pl-12 pr-6 text-lg"
+                disabled
+              />
+            </div>
+
+            <div class="mt-8 space-y-4" id="search-results">
+              <!-- Search results will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <a 
+          href="https://x.com/_ishand_" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="text-white/40 hover:text-white"
+          style="text-decoration: none; font-size: 0.875rem;"
+        >
+          made by ishan
+        </a>
+      </footer>
     </div>
   </div>
+
+  <script src="welcome.js"></script>
 </body>
 </html> 
