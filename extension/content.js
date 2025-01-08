@@ -70,7 +70,7 @@ function createLoadingIndicator() {
   document.head.appendChild(style);
 
   const text = document.createElement('span');
-  text.textContent = 'Fetching bookmarks from 2024 (don\'t close this tab)';
+  text.textContent = 'fetching your bookmarks (don\'t close this tab)';
 
   loadingDiv.appendChild(spinner);
   loadingDiv.appendChild(text);

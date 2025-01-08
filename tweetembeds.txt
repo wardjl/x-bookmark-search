@@ -1,0 +1,101 @@
+Embedded Tweets
+Embedded Tweet CMS best practices
+Overview
+An embedded Tweet adds pieces of the global conversation happening on Twitter to your site, content, and commentary. Sites powered by a CMS or custom software can provide deeper integration with Twitter content through site-level display preferences, content macros for cross-platform publishing, oEmbed fallback content, and JavaScript loaders described in this guide. Your extra effort will remove barriers between authors and cited content while integrating our third-party content with your site’s content flows and visual design.
+
+Define site-level theme options
+Define site-level widget options
+Define an embedded Tweet macro
+Request fallback markup using oEmbed
+Load widget JavaScript using your site’s resource manager
+ 
+
+Define site-level theme options
+Integrate Twitter widgets, including embedded Tweets, with your site’s color scheme by including HTML ``<meta>`elements </web/overview/widgets-webpage-properties>`__ in the <head> section of your webpage. Choose a light or dark color theme for Tweet text and background and customize the iframe border color by adding new markup to your site templates.
+
+<meta name="twitter:widgets:theme" content="light">
+<meta name="twitter:widgets:border-color" content="#55acee">
+Twitter for Websites reads the meta values on the page before constructing a new widget; these values can be overridden for individual widgets by passing the appropriate oEmbed parameter.
+
+Adding a Twitter widget options section in your CMS administrative interface helps individual publishers customize content without editing theme files.
+
+Twitter widget options administrative interface example
+
+Define site-level widget options
+Embedded Tweets may contain images, video, link previews, or other Tweets in conversations. Your site can specify site-wide preferences for display consistency across all pages, overriding default display options.
+
+Adding an embedded Tweet options section in your CMS administrative interface helps individual publishers set their preferences for Tweet content display across the entire site.
+
+Embedded Tweet options administrative interface example
+
+Define an embedded Tweet macro
+A macro added to your site’s editing interface abstracts away the detail of embedding Tweets, allowing an author to focus on content. Behind-the-scenes your macro should determine the best content to display in the current rendering environment, such as HTML and JavaScript on a webpage, native views on iOS and Android, or custom elements in AMP or Apple News Format.
+
+The simplest macro is a Tweet URL added to your article content. You may choose to have a more custom macro to capture additional embedded Tweet options unique to the article display.
+
+[tweet id="611193269532295168" lang="fr"]
+
+Verify macro inputs against a set of known embedded Tweet parameters before passing the option to the Twitter oEmbed endpoint to set author expectations and remove unneeded cruft.
+
+Request fallback markup using oEmbed
+An embedded Tweet should provide appropriate context when viewed on its own, before additional enhancements provided by Twitter for the current viewer. Request and store HTML markup for the requested Tweet data by requesting content from the oEmbed API endpoint. Add any custom options passed to your site’s macro, or extracted from the current context, as query parameters in the oEmbed request.
+
+A Tweet ID is preferred over a Tweet’s web URL: components of the URL such as the associated account’s screen_name may change; the Tweet ID is unique to the cited content and will remain the same.
+
+You may choose to omit theme-related options from oEmbed requests if you define these preferences inside your webpage’selements as described above.
+
+The oEmbed response from Twitter’s servers adheres to the oEmbed specification. Twitter’s oEmbed response is a “rich” oEmbed type containing HTML markup suitable for use inside existing HTML code.
+
+Sites should cache the HTML returned by the oEmbed API for the suggested cache lifetime specified by the cache_ageresponse parameter. Your cache method should incorporate the customization parameters passed to the oEmbed API as these parameters will modify the HTML response.
+
+Load widget JavaScript using your site’s resource manager
+Many sites, frameworks, and CMS systems have specialized CSS and JavaScript resource managers or module loaders tracking dependencies, asynchronous loading, and versioning. Include the remote-hosted widgets.js in your site’s resource loader whenever your site content includes an Embedded Tweet or other Twitter widget content.
+
+Define a new module definition for the Twitter for Websites JavaScript hosted at https://platform.twitter.com/widgets.js. Define a module ID of “twitter-wjs” to uniquely identify the Twitter JavaScript with the common ID used by asynchronous loading snippets — just in case copy-and-pasted JavaScript makes its way onto the webpage.
+
+Include an omit_script=true parameter in your oEmbed request to strip JavaScript from the Twitter response.
+
+Sites loading page fragments containing an embedded Tweet will need to request a scan for embedded Tweet content by calling the ``twttr.widgets.load` function </web/javascript/initialization>`__ after the new content is inserted into the page. Pass one or more DOM elements to the load function to restrict the scan for new content to just the new page fragments to improve site performance.
+
+Sites calling Twitter JavaScript should setup an asynchronous function queue storing functions to be executed in an array accessible at window.twttr._e. The Twitter asynchronous loading snippet provides setup of a function queue array with new functions queued by passing a function to window.twttr.ready. The Twitter for Websites JavaScript will flush the function queue while first executing its JavaScript.
+
+Export Tweet content in syndicated formats
+A modern news organization may publish alternate versions of its content formatted for Apple News, Facebook Instant Articles, or AMP clients. A Tweet cited in an article will need to be described in the markup expected by each format.
+
+AMP
+A Tweet should be described in an AMP template using the <amp-twitter> custom element.
+
+ 
+
+ 
+
+<amp-twitter
+  data-tweetid="611193269532295168"
+  layout="responsive">
+The AMP webpage will also need to add the amp-twitter component’s JavaScript rendering code to the document’s <head> to transform the supplied markup into a rendered embedded Tweet.
+
+<script async
+  custom-element="amp-twitter"
+  src="https://cdn.ampproject.org/v0/amp-twitter-0.1.js">
+</script>
+Apple News Format
+Describe a Tweet in your article using the Tweet component in Apple News Format.
+
+{
+  "role": "tweet",
+  "URL": "https://twitter.com/interior/status/611193269532295168"
+}
+Facebook Instant Articles Format
+Describe a Tweet contained in your content with an op-interactive <figure> element.
+
+<figure class="op-social">
+<iframe>
+<blockquote class="twitter-tweet">
+<p lang="en" dir="ltr">Mama knows best! Mother bear teaches cub how to dig for clams <a href="https://twitter.com/LakeClarkNPS">@LakeClarkNPS</a> by Sally Jewell <a href="https://twitter.com/hashtag/Alaska?src=hash">#Alaska</a> <a href="https://twitter.com/hashtag/nature?src=hash">#nature</a> <a href="http://t.co/1n3vYDJcAW">pic.twitter.com/1n3vYDJcAW</a></p>
+— US Dept of Interior (@Interior) <a href="https://twitter.com/Interior/status/611193269532295168">June 17, 2015</a>
+</blockquote>
+<script async
+  src="https://platform.twitter.com/widgets.js">
+</script>
+</iframe>
+<figure>

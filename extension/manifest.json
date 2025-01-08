@@ -12,6 +12,7 @@
   "host_permissions": [
     "https://x.com/*",
     "https://twitter.com/*",
+    "https://platform.twitter.com/*",
     "https://localhost:5173/*",
     "https://elondontsueme.com/*"
   ],
