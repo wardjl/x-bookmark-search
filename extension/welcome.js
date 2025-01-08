@@ -129,6 +129,7 @@ searchInput.addEventListener('input', (e) => {
     const query = e.target.value.trim();
     if (!query) {
       displayTweets(allTweets.slice(0, 50)); // Show first 50 tweets when no query
+      statusText.textContent = `${allTweets.length} tweets ready for search`;
       return;
     }
 
@@ -155,7 +156,7 @@ searchInput.addEventListener('input', (e) => {
         .map(item => item.tweet);
 
       displayTweets(results);
-      statusText.textContent = `Found ${results.length} matches`;
+      statusText.textContent = `found ${results.length} matches`;
     } catch (error) {
       console.error('Search error:', error);
       statusText.textContent = 'Search error occurred';
@@ -248,16 +249,18 @@ async function buildAllTweetEmbeddings(tweets) {
   try {
     // Initialize pipeline if needed
     if (!embeddingPipeline) {
-      statusText.textContent = 'Loading ML model...';
+      statusText.textContent = 'loading model...';
       embeddingPipeline = await pipeline(
         'feature-extraction',
         'Xenova/all-MiniLM-L6-v2',
         { 
           progress_callback: null,
           config: {
-            local: true,
-            quantized: true, // Use quantized model for faster inference
-            useWorker: false
+            local: false,
+            quantized: false,
+            useWorker: false,
+            wasmPath: chrome.runtime.getURL('lib/'),
+            tokenizerId: 'Xenova/all-MiniLM-L6-v2'
           }
         }
       );
@@ -268,7 +271,7 @@ async function buildAllTweetEmbeddings(tweets) {
       const progress = Math.round((processedCount / tweets.length) * 100);
       const timeElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       const tweetsPerSecond = (processedCount / (Date.now() - startTime) * 1000).toFixed(1);
-      statusText.textContent = `Building search index... ${progress}% (${processedCount}/${tweets.length} tweets, ${tweetsPerSecond}/s)`;
+      statusText.textContent = `building search index... ${progress}% (${processedCount}/${tweets.length} tweets, ${tweetsPerSecond}/s)`;
     };
 
     // Process in batches
@@ -339,17 +342,16 @@ function getTweetText(tweet) {
  */
 async function getEmbeddingForText(text) {
   try {
-    // Lazy-load pipeline the first time
     if (!embeddingPipeline) {
-      console.log("Loading local embedding model (transformers.js)...");
+      console.log("loading embedding model...");
       embeddingPipeline = await pipeline(
         'feature-extraction',
         'Xenova/all-MiniLM-L6-v2',
         { 
           config: {
-            local: true,
+            local: false,
             quantized: false,
-            useWorker: false // Disable web worker usage
+            useWorker: false
           }
         }
       );

@@ -13,8 +13,7 @@
     "https://x.com/*",
     "https://twitter.com/*",
     "https://platform.twitter.com/*",
-    "https://localhost:5173/*",
-    "https://elondontsueme.com/*"
+    "https://huggingface.co/*"
   ],
   "action": {
     "default_title": "Twitter Bookmark Search"
@@ -31,8 +30,14 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["welcome.html", "welcome.js", "instructions.png", "lib/transformers.min.js"],
-      "matches": ["https://x.com/*", "https://twitter.com/*", "https://localhost:5173/*", "https://elondontsueme.com/*"]
+      "resources": [
+        "welcome.html",
+        "welcome.js",
+        "instructions.png",
+        "lib/transformers.min.js",
+        "models/*"
+      ],
+      "matches": ["<all_urls>"]
     }
   ],
   "content_scripts": [
