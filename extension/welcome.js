@@ -201,11 +201,26 @@ function createTweetDisplay(tweet) {
     day: 'numeric'
   });
 
-  // Determine media layout class
-  let mediaClass = '';
+  // Only set mediaClass if we actually have media
+  let mediaSection = '';
   if (tweet.media) {
     const mediaCount = Array.isArray(tweet.media) ? tweet.media.length : 1;
-    mediaClass = ['single', 'double', 'triple', 'quad'][Math.min(mediaCount - 1, 3)];
+    const mediaClass = ['single', 'double', 'triple', 'quad'][Math.min(mediaCount - 1, 3)];
+    
+    mediaSection = `
+      <div class="tweet-media ${mediaClass}">
+        ${Array.isArray(tweet.media) ? 
+          tweet.media.map(m => 
+            m.type === 'photo' 
+              ? `<img src="${m.source}" alt="" loading="lazy">` 
+              : `<video src="${m.source}" controls></video>`
+          ).join('') 
+          : tweet.media.type === 'photo'
+            ? `<img src="${tweet.media.source}" alt="" loading="lazy">`
+            : `<video src="${tweet.media.source}" controls></video>`
+        }
+      </div>
+    `;
   }
 
   container.innerHTML = `
@@ -227,22 +242,7 @@ function createTweetDisplay(tweet) {
     </div>
     
     <div class="tweet-content">${tweet.full_text}</div>
-    
-    ${tweet.media ? `
-      <div class="tweet-media ${mediaClass}">
-        ${Array.isArray(tweet.media) ? 
-          tweet.media.map(m => 
-            m.type === 'photo' 
-              ? `<img src="${m.source}" alt="" loading="lazy">` 
-              : `<video src="${m.source}" controls></video>`
-          ).join('') 
-          : tweet.media.type === 'photo'
-            ? `<img src="${tweet.media.source}" alt="" loading="lazy">`
-            : `<video src="${tweet.media.source}" controls></video>`
-        }
-      </div>
-    ` : ''}
-    
+    ${mediaSection}
     <div class="tweet-footer">
       <span class="tweet-date">${formattedDate}</span>
       <a href="${tweet.url}" 
