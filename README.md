@@ -1,22 +1,6 @@
-# Twitter Bookmarks Search
+# X Bookmark Search
 
 A Chrome extension that enables semantic search of your Twitter bookmarks using local LangChain embeddings. Find your bookmarked tweets by searching for concepts and meaning, not just keywords.
-
-## Features
-
-- 🔍 Semantic search across your Twitter bookmarks
-- 🧠 Uses LangChain and embeddings for concept-based matching
-- 💨 Fast local search - no cloud/API dependencies
-- 🔒 Privacy-focused: all processing happens in your browser
-- 🎯 Find tweets based on meaning and concepts, not just exact text matches
-- 📱 Works directly in your Twitter interface
-
-## How It Works
-
-1. The extension processes your Twitter bookmarks locally
-2. Creates embeddings using LangChain to understand the semantic meaning of tweets
-3. When you search, it finds tweets that match the concept you're looking for
-4. Results are ranked by semantic similarity to your query
 
 ## Installation
 
@@ -24,6 +8,22 @@ A Chrome extension that enables semantic search of your Twitter bookmarks using 
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
 4. Click "Load unpacked" and select the `extension` directory
+
+## Features
+
+- Semantic search across your Twitter bookmarks
+- Uses LangChain and embeddings for concept-based matching
+- Fast local search - no cloud/API dependencies
+- Privacy-focused: all processing happens in your browser
+- Find tweets based on meaning and concepts, not just exact text matches
+- Works directly in your Twitter interface
+
+## How It Works
+
+1. The extension processes your Twitter bookmarks locally
+2. Creates embeddings using LangChain to understand the semantic meaning of tweets
+3. When you search, it finds tweets that match the concept you're looking for
+4. Results are ranked by semantic similarity to your query
 
 ## Usage
 
@@ -38,6 +38,10 @@ A Chrome extension that enables semantic search of your Twitter bookmarks using 
 - `content.js`: Handles Twitter page integration and UI
 - `background.js`: Manages bookmark processing and search
 - `popup.html/js/css`: Extension popup interface
+
+## Credit to Forked Project
+
+This project was heavily inspired by and built upon the functionality provided by the [bookmarks-wrapped](https://github.com/sahil-lalani/bookmarks-wrapped) project by [Sahil Lalani](https://github.com/sahil-lalani). Much of the core functionality, including bookmark processing and search mechanisms, was adapted from this excellent work. Special thanks to Sahil Lalani for laying the foundation.
 
 ## Development
 
