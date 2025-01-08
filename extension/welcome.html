@@ -215,6 +215,13 @@
 
     footer a {
       font-size: 1.25rem;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.4);
+      transition: color 0.2s ease;
+    }
+
+    footer a:hover {
+      color: rgba(255, 255, 255, 1);
     }
 
     /* Main container styles */
@@ -283,7 +290,7 @@
     <div class="relative flex min-h-screen flex-col">
       <main class="flex-1">
         <div class="container mx-auto px-4 py-16">
-          <div class="mb-12 text-center">
+          <div class="mb-12 text-center" style="width: 100%;">
             <h1 class="text-6xl font-bold tracking-tight text-white">
               a better way to search your x bookmarks
             </h1>
@@ -292,7 +299,7 @@
             </p>
           </div>
 
-          <div class="mx-auto" style="max-width: 1200px;">
+          <div class="mx-auto" style="max-width: 100%;">
             <div class="relative">
               <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -303,6 +310,7 @@
                 placeholder="search your bookmarks..."
                 id="search-input"
                 class="search-input h-14 w-full rounded-full pl-12 pr-6 text-lg"
+                style="width: 100%;"
                 disabled
               />
             </div>

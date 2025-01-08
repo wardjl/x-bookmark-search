@@ -16,7 +16,7 @@
     "https://huggingface.co/*"
   ],
   "action": {
-    "default_title": "Twitter Bookmark Search"
+    "default_title": "x bookmark search"
   },
   "background": {
     "service_worker": "background.js",

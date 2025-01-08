@@ -20,11 +20,6 @@ The project consists of two main components:
 - Built with vanilla JavaScript, HTML, and CSS
 - Uses html2canvas for generating shareable images
 
-### Landing Page (`/landing`)
-- Marketing website for the extension
-- Built with Vite, TailwindCSS, and deployed on Firebase
-- Modern, responsive design
-
 ## Installation
 
 1. Clone this repository or download the source code
