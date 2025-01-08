@@ -39,6 +39,10 @@ A Chrome extension that enables semantic search of your Twitter bookmarks using 
 - `background.js`: Manages bookmark processing and search
 - `popup.html/js/css`: Extension popup interface
 
+## Credit to Forked Project
+
+This project was heavily inspired by and built upon the functionality provided by the [bookmarks-wrapped](https://github.com/sahil-lalani/bookmarks-wrapped) project by [Sahil Lalani](https://github.com/sahil-lalani). Much of the core functionality, including bookmark processing and search mechanisms, was adapted from this excellent work. Special thanks to Sahil Lalani for laying the foundation.
+
 ## Development
 
 ```bash
