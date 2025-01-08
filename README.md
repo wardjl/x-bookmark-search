@@ -1,72 +1,59 @@
-# Bookmarks Wrapped
+# Twitter Bookmarks Search
 
-Bookmarks Wrapped is a Chrome extension similar to Spotify Wrapped. See your top bookmarked accounts, reading time stats, and monthly trends in a beautiful presentation.
+A Chrome extension that enables semantic search of your Twitter bookmarks using local LangChain embeddings. Find your bookmarked tweets by searching for concepts and meaning, not just keywords.
 
 ## Features
 
-- View your 2024 Twitter bookmarks statistics in an engaging slideshow format
-- See your top bookmarked accounts
-- Track your reading time and monthly bookmarking trends
-- Beautiful, interactive UI with smooth transitions
-- Share your stats with friends
-- Privacy-focused: all processing happens locally in your browser
+- 🔍 Semantic search across your Twitter bookmarks
+- 🧠 Uses LangChain and embeddings for concept-based matching
+- 💨 Fast local search - no cloud/API dependencies
+- 🔒 Privacy-focused: all processing happens in your browser
+- 🎯 Find tweets based on meaning and concepts, not just exact text matches
+- 📱 Works directly in your Twitter interface
 
-## Project Structure
+## How It Works
 
-The project consists of two main components:
-
-### Extension (`/extension`)
-- Chrome extension that processes your bookmarks and generates the wrapped experience
-- Built with vanilla JavaScript, HTML, and CSS
-- Uses html2canvas for generating shareable images
+1. The extension processes your Twitter bookmarks locally
+2. Creates embeddings using LangChain to understand the semantic meaning of tweets
+3. When you search, it finds tweets that match the concept you're looking for
+4. Results are ranked by semantic similarity to your query
 
 ## Installation
 
-1. Clone this repository or download the source code
+1. Clone this repository
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
 4. Click "Load unpacked" and select the `extension` directory
 
 ## Usage
 
-1. Click on the extension icon in your Chrome toolbar
-2. Click "🎁 Wrap Your Bookmarks 🎁"
-3. Enjoy your personalized bookmarks wrapped experience!
-4. Share your stats with friends
+1. Go to Twitter and open your bookmarks
+2. Use the search bar added by the extension
+3. Enter your search query - try searching for concepts!
+4. See results ranked by semantic relevance
+
+## Project Structure
+
+- `manifest.json`: Extension configuration
+- `content.js`: Handles Twitter page integration and UI
+- `background.js`: Manages bookmark processing and search
+- `popup.html/js/css`: Extension popup interface
 
 ## Development
 
-### Extension
 ```bash
-cd extension
 # Load unpacked extension in Chrome for development
+1. Enable Chrome Developer Mode
+2. Load the /extension directory
 ```
 
-### Landing Page
-```bash
-cd landing
-npm install
-npm run dev     # Start development server
-npm run build   # Build for production
-firebase deploy  # Deploy to Firebase
-```
+## Privacy
 
-Note: You need to have a firebase project setup and the firebase cli installed.
-
-## File Structure
-
-### Extension
-- `manifest.json`: Extension configuration
-- `popup.html/js/css`: Main extension UI and logic
-- `background.js`: Background script for bookmark processing
-- `content.js`: Content script for page interaction
-- `html2canvas.min.js`: For generating shareable images
-
-### Landing Page
-- `src/`: Source code for the landing page
-- `public/`: Static assets
-- `dist/`: Built files
-- Configuration files for Vite, TailwindCSS, and Firebase
+This extension:
+- Runs 100% locally in your browser
+- Does not send your bookmarks or searches to any server
+- Does not require any API keys or cloud services
+- Is completely open source
 
 ## Contributing
 
@@ -74,8 +61,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License
-
-## Disclaimer
-
-This project is not affiliated with, endorsed, or sponsored by Twitter/X Corp. Use at your own risk. Please don't sue me, Elon 🙏
+MIT License - see [LICENSE](LICENSE) for details
