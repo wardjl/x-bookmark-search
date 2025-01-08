@@ -1,19 +1,25 @@
 /************************************************************
  * welcome.js -- Local "Semantic-ish" Searching of Bookmarks
- * All code is contained here for simplicity.
+ * Uses Transformers.js for local embeddings (no API keys).
  ************************************************************/
+
+import { pipeline } from './lib/transformers.min.js';
 
 // --- UI Elements ---
 const searchInput = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results').querySelector('.tweet-grid');
 const statusText = document.getElementById('status-text');
 
-let allTweets = [];  // Will store tweet objects + their vectors (embedding)
+let allTweets = [];      // Will store tweet objects + their embeddings
+let embeddingPipeline;   // Pipeline for local embeddings from Transformers.js
+let isProcessingEmbeddings = false;
+const BATCH_SIZE = 10; // Increased batch size
+const CACHE_KEY = 'tweet_embeddings_cache';
 
 // ----------------------------------------------------------
 // 1) On Load, Check if Tweets Are Imported and Trigger Import
 // ----------------------------------------------------------
-chrome.storage.local.get(null, (result) => {
+chrome.storage.local.get(null, async (result) => {
   const meta = result.bookmarked_tweets_meta;
   if (meta) {
     // Gather all tweets in memory
@@ -28,14 +34,62 @@ chrome.storage.local.get(null, (result) => {
     statusText.textContent = `${meta.totalTweets} bookmarks imported`;
     searchInput.disabled = false;
     
-    // Build local embeddings for all these tweets
-    buildAllTweetEmbeddings(allTweets);
+    // Try to load cached embeddings first
+    const cache = await loadEmbeddingCache();
+    if (cache) {
+      // Apply cached embeddings to tweets
+      let cacheHits = 0;
+      allTweets.forEach(tweet => {
+        if (cache[tweet.id]) {
+          tweet.embedding = cache[tweet.id];
+          cacheHits++;
+        }
+      });
+      console.log(`Loaded ${cacheHits} embeddings from cache`);
+      
+      // Only build embeddings for tweets without them
+      const tweetsNeedingEmbeddings = allTweets.filter(t => !t.embedding);
+      if (tweetsNeedingEmbeddings.length > 0) {
+        statusText.textContent = `Building embeddings for ${tweetsNeedingEmbeddings.length} new tweets...`;
+        await buildAllTweetEmbeddings(tweetsNeedingEmbeddings);
+      } else {
+        statusText.textContent = `${allTweets.length} bookmarks ready for search`;
+      }
+    } else {
+      // Build embeddings for all tweets
+      await buildAllTweetEmbeddings(allTweets);
+    }
   } else {
     // Automatically trigger import
     statusText.textContent = 'please wait while we import your bookmarks...';
     chrome.runtime.sendMessage({ action: "exportBookmarks" });
   }
 });
+
+// Cache management functions
+async function loadEmbeddingCache() {
+  try {
+    const result = await chrome.storage.local.get(CACHE_KEY);
+    return result[CACHE_KEY] || null;
+  } catch (error) {
+    console.warn('Error loading embedding cache:', error);
+    return null;
+  }
+}
+
+async function updateEmbeddingCache(tweets) {
+  try {
+    const cache = await loadEmbeddingCache() || {};
+    tweets.forEach(tweet => {
+      if (tweet.embedding) {
+        cache[tweet.id] = tweet.embedding;
+      }
+    });
+    await chrome.storage.local.set({ [CACHE_KEY]: cache });
+  } catch (error) {
+    console.warn('Error updating embedding cache:', error);
+  }
+}
 
 // ----------------------------------------------------------
 // 2) Listen for Import Results
@@ -48,7 +102,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     searchInput.disabled = false;
 
     // Build embeddings for newly imported tweets
-    buildAllTweetEmbeddings(allTweets);
+    buildAllTweetEmbeddings(allTweets).then(() => {
+      console.log("All tweet embeddings built!");
+    });
 
     if (sendResponse) {
       sendResponse({ status: "received" });
@@ -59,26 +115,52 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // ----------------------------------------------------------
-// 3) Search Input Handler
+// 3) Search Input Handler (Using Cosine Similarity of Embeddings)
 // ----------------------------------------------------------
+let searchTimeout;
 searchInput.addEventListener('input', (e) => {
-  const query = e.target.value.trim().toLowerCase();
-  if (!query) {
-    displayTweets(allTweets);
-    return;
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
   }
+  
+  // Debounce search
+  searchTimeout = setTimeout(async () => {
+    const query = e.target.value.trim();
+    if (!query) {
+      displayTweets(allTweets.slice(0, 50)); // Show first 50 tweets when no query
+      return;
+    }
 
-  const queryVector = computeTfIdfVector(query);
-  const results = allTweets
-    .map(tweet => ({
-      tweet,
-      score: cosineSimilaritySparse(queryVector, tweet.embedding)
-    }))
-    .filter(item => item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map(item => item.tweet);
+    try {
+      // Show loading state
+      statusText.textContent = 'Searching...';
+      
+      // Embed the query text
+      const queryEmbedding = await getEmbeddingForText(query);
+      if (!queryEmbedding) {
+        displayTweets([]);
+        return;
+      }
 
-  displayTweets(results);
+      // Rank tweets by similarity
+      const results = allTweets
+        .map(tweet => ({
+          tweet,
+          score: tweet.embedding ? cosineSimilarity(queryEmbedding, tweet.embedding) : 0
+        }))
+        .filter(item => item.score > 0.3) // Only show reasonably good matches
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 50) // Limit to top 50 results
+        .map(item => item.tweet);
+
+      displayTweets(results);
+      statusText.textContent = `Found ${results.length} matches`;
+    } catch (error) {
+      console.error('Search error:', error);
+      statusText.textContent = 'Search error occurred';
+    }
+  }, 300); // Wait 300ms after last keystroke before searching
 });
 
 // ----------------------------------------------------------
@@ -155,132 +237,155 @@ function createTweetDisplay(tweet) {
 }
 
 // ----------------------------------------------------------
-// 6) TF-IDF Implementation (unchanged)
+// 6) Build Embeddings for Tweets (Local Transformers.js)
 // ----------------------------------------------------------
-/**
- * For demonstration, let's do a simple TF-IDF-like approach
- * 1. Collect all text from all tweets to build a "vocabulary"
- * 2. Calculate IDF for each word
- * 3. For each tweet, build a vector of TF * IDF
- */
-let globalVocabulary = {};  // { word -> docCountInWhichItAppears }
-let idfScores = {};         // { word -> IDF }
+async function buildAllTweetEmbeddings(tweets) {
+  if (!tweets || tweets.length === 0 || isProcessingEmbeddings) return;
+  
+  isProcessingEmbeddings = true;
+  const startTime = Date.now();
+  
+  try {
+    // Initialize pipeline if needed
+    if (!embeddingPipeline) {
+      statusText.textContent = 'Loading ML model...';
+      embeddingPipeline = await pipeline(
+        'feature-extraction',
+        'Xenova/all-MiniLM-L6-v2',
+        { 
+          progress_callback: null,
+          config: {
+            local: true,
+            quantized: true, // Use quantized model for faster inference
+            useWorker: false
+          }
+        }
+      );
+    }
 
-function buildAllTweetEmbeddings(tweets) {
-  if (!tweets || tweets.length === 0) return;
+    let processedCount = 0;
+    const updateProgress = () => {
+      const progress = Math.round((processedCount / tweets.length) * 100);
+      const timeElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      const tweetsPerSecond = (processedCount / (Date.now() - startTime) * 1000).toFixed(1);
+      statusText.textContent = `Building search index... ${progress}% (${processedCount}/${tweets.length} tweets, ${tweetsPerSecond}/s)`;
+    };
 
-  // 1) Build "corpus" of all tokens
-  const docs = tweets.map(t => getTweetText(t));
-
-  // 2) Build vocabulary counts: how many docs a word appears in
-  globalVocabulary = {};
-  docs.forEach((docText) => {
-    // For each doc, track unique words
-    const wordSet = new Set(tokenize(docText));
-    wordSet.forEach(word => {
-      globalVocabulary[word] = (globalVocabulary[word] || 0) + 1;
-    });
-  });
-
-  // 3) Compute IDF (inverse doc frequency) for each word
-  //    IDF(word) = log(totalDocs / (1 + docCountForWord))
-  const totalDocs = docs.length;
-  for (const word in globalVocabulary) {
-    const docCount = globalVocabulary[word];
-    idfScores[word] = Math.log(totalDocs / (1 + docCount));
+    // Process in batches
+    for (let i = 0; i < tweets.length; i += BATCH_SIZE) {
+      const batch = tweets.slice(i, i + BATCH_SIZE);
+      const batchTexts = batch.map(tweet => getTweetText(tweet));
+      
+      try {
+        // Process batch of tweets
+        const results = await Promise.all(
+          batchTexts.map(text => 
+            embeddingPipeline(text, { 
+              pooling: 'mean', 
+              normalize: true 
+            })
+          )
+        );
+        
+        // Store embeddings
+        results.forEach((result, idx) => {
+          batch[idx].embedding = Array.from(result.data);
+        });
+        
+        processedCount += batch.length;
+        updateProgress();
+        
+        // Cache embeddings every few batches
+        if (i % (BATCH_SIZE * 5) === 0) {
+          await updateEmbeddingCache(batch);
+        }
+      } catch (error) {
+        console.warn('Error processing batch:', error);
+        // Continue with next batch even if this one failed
+      }
+      
+      // Brief UI pause every few batches
+      if (i % (BATCH_SIZE * 3) === 0) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    }
+    
+    // Final cache update
+    await updateEmbeddingCache(tweets);
+    
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+    statusText.textContent = `${tweets.length} bookmarks ready for search (processed in ${totalTime}s)`;
+  } catch (error) {
+    console.error('Error building embeddings:', error);
+    statusText.textContent = 'Error building search index';
+  } finally {
+    isProcessingEmbeddings = false;
   }
-
-  // 4) Build vector for each tweet
-  tweets.forEach((tweet, idx) => {
-    const text = getTweetText(tweet);
-    tweet.embedding = computeTfIdfVector(text);
-  });
-
-  console.log('Local TF-IDF embeddings built for all tweets!');
 }
 
 /**
  * Return the relevant text from tweet for embedding
+ * Emphasizes the tweet text, author name, and username
  */
 function getTweetText(tweet) {
   const authorName = tweet.author?.name || '';
   const authorScreenName = tweet.author?.screen_name || '';
   const tweetText = tweet.full_text || '';
-  // Combine them for a richer representation
-  return `${tweetText} ${authorName} ${authorScreenName}`;
+  return `${tweetText}\n${authorName}\n${authorScreenName}`.trim();
 }
 
 /**
- * Tokenize text into words, removing punctuation and converting to lowercase
+ * Get an embedding vector from Transformers.js
  */
-function tokenize(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, '') // remove punctuation
-    .split(/\s+/)
-    .filter(Boolean);
-}
-
-/**
- * Compute TF-IDF vector for a single piece of text
- */
-function computeTfIdfVector(text) {
-  // 1) Tokenize
-  const words = tokenize(text);
-  if (words.length === 0) {
-    // If no words, return empty or zero vector. We'll store it as a map for simplicity
-    return {};
-  }
-
-  // 2) Count frequency of each word in this doc
-  const freqMap = {};
-  words.forEach(word => {
-    freqMap[word] = (freqMap[word] || 0) + 1;
-  });
-
-  // 3) Build vector: for each word that appears, TF * IDF
-  // We store it as an object: { word -> tfidfScore }
-  const tfidfVec = {};
-  const maxFreq = Math.max(...Object.values(freqMap));
-  for (const w in freqMap) {
-    const tf = freqMap[w] / maxFreq; // normalized term freq
-    const idf = idfScores[w] || 0;   // if the word wasn't in globalVocabulary for some reason
-    tfidfVec[w] = tf * idf;
-  }
-
-  return tfidfVec;
-}
-
-// ----------------------------------------------------------
-// 7) Cosine Similarity for "Sparse" TF-IDF Vectors
-// ----------------------------------------------------------
-function cosineSimilaritySparse(vecA, vecB) {
-  // vecA and vecB are objects like: { word -> tfidfScore }
-  // sum over common words
-  let dot = 0;
-  let magA = 0;
-  let magB = 0;
-
-  // dot product
-  for (const w in vecA) {
-    if (w in vecB) {
-      dot += vecA[w] * vecB[w];
+async function getEmbeddingForText(text) {
+  try {
+    // Lazy-load pipeline the first time
+    if (!embeddingPipeline) {
+      console.log("Loading local embedding model (transformers.js)...");
+      embeddingPipeline = await pipeline(
+        'feature-extraction',
+        'Xenova/all-MiniLM-L6-v2',
+        { 
+          config: {
+            local: true,
+            quantized: false,
+            useWorker: false // Disable web worker usage
+          }
+        }
+      );
     }
-  }
 
-  // magnitude of A
-  for (const w in vecA) {
-    magA += vecA[w] * vecA[w];
+    // Get embeddings
+    const result = await embeddingPipeline(text, { 
+      pooling: 'mean', 
+      normalize: true 
+    });
+    return Array.from(result.data);
+  } catch (error) {
+    console.error('Error generating embedding:', error);
+    return null;
   }
+}
 
-  // magnitude of B
-  for (const w in vecB) {
-    magB += vecB[w] * vecB[w];
-  }
-
-  // final cos sim
-  if (magA === 0 || magB === 0) {
+// ----------------------------------------------------------
+// 7) Cosine Similarity for Embedding Arrays
+// ----------------------------------------------------------
+function cosineSimilarity(a, b) {
+  if (!a || !b || !a.length || !b.length || a.length !== b.length) {
     return 0;
   }
-  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+  
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  
+  if (normA === 0 || normB === 0) return 0;
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
