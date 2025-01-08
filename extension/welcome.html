@@ -139,22 +139,151 @@
     /* Tweet embed container styles */
     .tweet-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1rem;
       width: 100%;
+      padding: 0 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .tweet-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .tweet-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
     
     .tweet-container {
-      min-height: 200px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 1rem;
-      transition: all 0.2s;
+      border-radius: 16px;
+      transition: background 0.2s;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      position: relative;
     }
 
     .tweet-container:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Tweet header styles */
+    .tweet-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+    }
+
+    .tweet-author-image {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .tweet-author-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tweet-author-name {
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 15px;
+      line-height: 20px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tweet-author-handle {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    /* Tweet content styles */
+    .tweet-content {
+      padding: 0 16px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      line-height: 20px;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Media styles */
+    .tweet-media {
+      margin: 12px 0;
+      border-radius: 16px;
+      overflow: hidden;
+      max-height: 400px;
+      display: grid;
+      gap: 2px;
+      padding: 0 16px;
+    }
+
+    .tweet-media.single {
+      grid-template-columns: 1fr;
+    }
+
+    .tweet-media.double {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tweet-media.triple {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .tweet-media.quad {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+    }
+
+    .tweet-media img,
+    .tweet-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 16px;
+    }
+
+    /* Tweet footer styles */
+    .tweet-footer {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tweet-date {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+    }
+
+    .tweet-link {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+      text-decoration: none;
+      transition: color 0.2s;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tweet-link:hover {
+      color: rgb(29, 155, 240);
     }
 
     /* Loading placeholder */
@@ -280,6 +409,24 @@
       border-radius: 1rem;
       transition: all 0.2s;
     }
+
+    /* Add this new style for the overlay link */
+    .tweet-overlay-link {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* Make sure the footer links appear above the overlay */
+    .tweet-footer {
+      position: relative;
+      z-index: 2;
+    }
+
+    .tweet-link {
+      position: relative;
+      z-index: 2;
+    }
   </style>
 </head>
 <body>
@@ -325,14 +472,7 @@
       </main>
 
       <footer class="footer">
-        <a 
-          href="https://x.com/_ishand_" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          class="text-white/40 hover:text-white"
-        >
-          made by ishan
-        </a>
+        <span class="text-white/40" style="font-size: 1.25rem;">made by </span><a href="https://x.com/_ishand_" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-white">ishan,</a>,<span class="text-white/40" style="font-size: 1.25rem;"> fully </span><a href="https://github.com/ishandeshpande/twitter-bookmark-search" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-white">open source</a>
       </footer>
     </div>
   </div>

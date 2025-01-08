@@ -191,9 +191,9 @@ function displayTweets(tweets) {
 // ----------------------------------------------------------
 function createTweetDisplay(tweet) {
   const container = document.createElement('div');
-  container.className = 'tweet-container p-4';
+  container.className = 'tweet-container';
 
-  // Format the date
+  // Format date
   const date = new Date(tweet.timestamp);
   const formattedDate = date.toLocaleDateString('en-US', {
     year: 'numeric',
@@ -201,35 +201,55 @@ function createTweetDisplay(tweet) {
     day: 'numeric'
   });
 
+  // Determine media layout class
+  let mediaClass = '';
+  if (tweet.media) {
+    const mediaCount = Array.isArray(tweet.media) ? tweet.media.length : 1;
+    mediaClass = ['single', 'double', 'triple', 'quad'][Math.min(mediaCount - 1, 3)];
+  }
+
   container.innerHTML = `
-    <div class="flex items-center gap-3 mb-2">
-      <img src="${tweet.author.profile_image_url}" alt="" class="w-12 h-12 rounded-full">
-      <div>
-        <div class="font-medium text-white">${tweet.author.name}</div>
-        <div class="text-white/60">@${tweet.author.screen_name}</div>
+    <a href="${tweet.url}" 
+       target="_blank" 
+       rel="noopener noreferrer"
+       class="tweet-overlay-link"
+       aria-label="View tweet"></a>
+    <div class="tweet-header">
+      <img 
+        src="${tweet.author.profile_image_url}" 
+        alt="" 
+        class="tweet-author-image"
+      >
+      <div class="tweet-author-info">
+        <div class="tweet-author-name">${tweet.author.name}</div>
+        <div class="tweet-author-handle">@${tweet.author.screen_name}</div>
       </div>
     </div>
-    <div class="text-white/90 mb-2 whitespace-pre-wrap">${tweet.full_text}</div>
-    ${
-      tweet.media
-        ? `
-          <div class="mb-2">
-            ${
-              tweet.media.type === 'photo'
-                ? `<img src="${tweet.media.source}" alt="" class="w-full rounded-lg">`
-                : (tweet.media.type === 'video' || tweet.media.type === 'animated_gif')
-                  ? `<video src="${tweet.media.source}" controls class="w-full rounded-lg"></video>`
-                  : ''
-            }
-          </div>
-        `
-        : ''
-    }
-    <div class="flex justify-between items-center text-sm text-white/40">
-      <span>${formattedDate}</span>
-      <a href="${tweet.url}" target="_blank" rel="noopener noreferrer"
-         class="hover:text-white transition-colors">
-        View on Twitter →
+    
+    <div class="tweet-content">${tweet.full_text}</div>
+    
+    ${tweet.media ? `
+      <div class="tweet-media ${mediaClass}">
+        ${Array.isArray(tweet.media) ? 
+          tweet.media.map(m => 
+            m.type === 'photo' 
+              ? `<img src="${m.source}" alt="" loading="lazy">` 
+              : `<video src="${m.source}" controls></video>`
+          ).join('') 
+          : tweet.media.type === 'photo'
+            ? `<img src="${tweet.media.source}" alt="" loading="lazy">`
+            : `<video src="${tweet.media.source}" controls></video>`
+        }
+      </div>
+    ` : ''}
+    
+    <div class="tweet-footer">
+      <span class="tweet-date">${formattedDate}</span>
+      <a href="${tweet.url}" 
+         target="_blank" 
+         rel="noopener noreferrer" 
+         class="tweet-link">
+        View on X →
       </a>
     </div>
   `;

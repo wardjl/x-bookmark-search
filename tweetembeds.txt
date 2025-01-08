@@ -1,101 +1,172 @@
-Embedded Tweets
-Embedded Tweet CMS best practices
-Overview
-An embedded Tweet adds pieces of the global conversation happening on Twitter to your site, content, and commentary. Sites powered by a CMS or custom software can provide deeper integration with Twitter content through site-level display preferences, content macros for cross-platform publishing, oEmbed fallback content, and JavaScript loaders described in this guide. Your extra effort will remove barriers between authors and cited content while integrating our third-party content with your site’s content flows and visual design.
+Here’s a comprehensive guide to implementing a **sandboxed iframe** in your Chrome extension for embedding Twitter content, while adhering to **Manifest V3**'s strict security policies. This approach ensures compliance with Chrome's Content Security Policy (CSP) and allows safe integration of external resources like Twitter embeds.
 
-Define site-level theme options
-Define site-level widget options
-Define an embedded Tweet macro
-Request fallback markup using oEmbed
-Load widget JavaScript using your site’s resource manager
- 
+---
 
-Define site-level theme options
-Integrate Twitter widgets, including embedded Tweets, with your site’s color scheme by including HTML ``<meta>`elements </web/overview/widgets-webpage-properties>`__ in the <head> section of your webpage. Choose a light or dark color theme for Tweet text and background and customize the iframe border color by adding new markup to your site templates.
+## **Step 1: Understand the Sandbox Environment**
 
-<meta name="twitter:widgets:theme" content="light">
-<meta name="twitter:widgets:border-color" content="#55acee">
-Twitter for Websites reads the meta values on the page before constructing a new widget; these values can be overridden for individual widgets by passing the appropriate oEmbed parameter.
+A sandboxed iframe isolates its content from the parent page, restricting its access to the parent’s DOM and JavaScript. This is ideal for embedding third-party content like Twitter widgets, as it prevents them from interfering with your extension's functionality.
 
-Adding a Twitter widget options section in your CMS administrative interface helps individual publishers customize content without editing theme files.
+Key points about sandboxed iframes:
+- They operate in a unique origin.
+- They cannot access extension APIs or non-sandboxed pages directly.
+- Communication between the iframe and the parent must use `postMessage()`.
 
-Twitter widget options administrative interface example
+---
 
-Define site-level widget options
-Embedded Tweets may contain images, video, link previews, or other Tweets in conversations. Your site can specify site-wide preferences for display consistency across all pages, overriding default display options.
+## **Step 2: Update Your Manifest File**
 
-Adding an embedded Tweet options section in your CMS administrative interface helps individual publishers set their preferences for Tweet content display across the entire site.
+In Manifest V3, you must declare sandboxed pages explicitly in your `manifest.json` file. This includes defining a custom CSP for the sandboxed pages.
 
-Embedded Tweet options administrative interface example
+Here’s an example configuration:
 
-Define an embedded Tweet macro
-A macro added to your site’s editing interface abstracts away the detail of embedding Tweets, allowing an author to focus on content. Behind-the-scenes your macro should determine the best content to display in the current rendering environment, such as HTML and JavaScript on a webpage, native views on iOS and Android, or custom elements in AMP or Apple News Format.
-
-The simplest macro is a Tweet URL added to your article content. You may choose to have a more custom macro to capture additional embedded Tweet options unique to the article display.
-
-[tweet id="611193269532295168" lang="fr"]
-
-Verify macro inputs against a set of known embedded Tweet parameters before passing the option to the Twitter oEmbed endpoint to set author expectations and remove unneeded cruft.
-
-Request fallback markup using oEmbed
-An embedded Tweet should provide appropriate context when viewed on its own, before additional enhancements provided by Twitter for the current viewer. Request and store HTML markup for the requested Tweet data by requesting content from the oEmbed API endpoint. Add any custom options passed to your site’s macro, or extracted from the current context, as query parameters in the oEmbed request.
-
-A Tweet ID is preferred over a Tweet’s web URL: components of the URL such as the associated account’s screen_name may change; the Tweet ID is unique to the cited content and will remain the same.
-
-You may choose to omit theme-related options from oEmbed requests if you define these preferences inside your webpage’selements as described above.
-
-The oEmbed response from Twitter’s servers adheres to the oEmbed specification. Twitter’s oEmbed response is a “rich” oEmbed type containing HTML markup suitable for use inside existing HTML code.
-
-Sites should cache the HTML returned by the oEmbed API for the suggested cache lifetime specified by the cache_ageresponse parameter. Your cache method should incorporate the customization parameters passed to the oEmbed API as these parameters will modify the HTML response.
-
-Load widget JavaScript using your site’s resource manager
-Many sites, frameworks, and CMS systems have specialized CSS and JavaScript resource managers or module loaders tracking dependencies, asynchronous loading, and versioning. Include the remote-hosted widgets.js in your site’s resource loader whenever your site content includes an Embedded Tweet or other Twitter widget content.
-
-Define a new module definition for the Twitter for Websites JavaScript hosted at https://platform.twitter.com/widgets.js. Define a module ID of “twitter-wjs” to uniquely identify the Twitter JavaScript with the common ID used by asynchronous loading snippets — just in case copy-and-pasted JavaScript makes its way onto the webpage.
-
-Include an omit_script=true parameter in your oEmbed request to strip JavaScript from the Twitter response.
-
-Sites loading page fragments containing an embedded Tweet will need to request a scan for embedded Tweet content by calling the ``twttr.widgets.load` function </web/javascript/initialization>`__ after the new content is inserted into the page. Pass one or more DOM elements to the load function to restrict the scan for new content to just the new page fragments to improve site performance.
-
-Sites calling Twitter JavaScript should setup an asynchronous function queue storing functions to be executed in an array accessible at window.twttr._e. The Twitter asynchronous loading snippet provides setup of a function queue array with new functions queued by passing a function to window.twttr.ready. The Twitter for Websites JavaScript will flush the function queue while first executing its JavaScript.
-
-Export Tweet content in syndicated formats
-A modern news organization may publish alternate versions of its content formatted for Apple News, Facebook Instant Articles, or AMP clients. A Tweet cited in an article will need to be described in the markup expected by each format.
-
-AMP
-A Tweet should be described in an AMP template using the <amp-twitter> custom element.
-
- 
-
- 
-
-<amp-twitter
-  data-tweetid="611193269532295168"
-  layout="responsive">
-The AMP webpage will also need to add the amp-twitter component’s JavaScript rendering code to the document’s <head> to transform the supplied markup into a rendered embedded Tweet.
-
-<script async
-  custom-element="amp-twitter"
-  src="https://cdn.ampproject.org/v0/amp-twitter-0.1.js">
-</script>
-Apple News Format
-Describe a Tweet in your article using the Tweet component in Apple News Format.
-
+```json
 {
-  "role": "tweet",
-  "URL": "https://twitter.com/interior/status/611193269532295168"
+  "manifest_version": 3,
+  "name": "Twitter Embed Extension",
+  "version": "1.0",
+  "description": "Embed tweets securely using a sandboxed iframe.",
+  "permissions": ["https://publish.twitter.com/"],
+  "host_permissions": ["https://platform.twitter.com/"],
+  "sandbox": {
+    "pages": ["sandbox.html"]
+  },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts; script-src 'self' https://platform.twitter.com;"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
 }
-Facebook Instant Articles Format
-Describe a Tweet contained in your content with an op-interactive <figure> element.
+```
 
-<figure class="op-social">
-<iframe>
-<blockquote class="twitter-tweet">
-<p lang="en" dir="ltr">Mama knows best! Mother bear teaches cub how to dig for clams <a href="https://twitter.com/LakeClarkNPS">@LakeClarkNPS</a> by Sally Jewell <a href="https://twitter.com/hashtag/Alaska?src=hash">#Alaska</a> <a href="https://twitter.com/hashtag/nature?src=hash">#nature</a> <a href="http://t.co/1n3vYDJcAW">pic.twitter.com/1n3vYDJcAW</a></p>
-— US Dept of Interior (@Interior) <a href="https://twitter.com/Interior/status/611193269532295168">June 17, 2015</a>
-</blockquote>
-<script async
-  src="https://platform.twitter.com/widgets.js">
-</script>
-</iframe>
-<figure>
+### Key Points:
+- The `sandbox` field lists the sandboxed pages (e.g., `sandbox.html`).
+- The `content_security_policy.sandbox` defines what scripts and resources are allowed in the sandbox. Avoid `allow-same-origin` for security reasons.
+
+---
+
+## **Step 3: Create the Sandboxed Page**
+
+The sandboxed page (`sandbox.html`) will load the Twitter embed script (`widgets.js`) and render tweets securely. Here’s an example:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sandbox</title>
+</head>
+<body>
+  <blockquote class="twitter-tweet">
+    <a href="https://twitter.com/TwitterDev/status/123456789"></a>
+  </blockquote>
+
+  <!-- Load Twitter's widgets.js -->
+  <script async src="https://platform.twitter.com/widgets.js"></script>
+</body>
+</html>
+```
+
+### Notes:
+- The sandboxed page can include external scripts like `widgets.js`, as it uses its own CSP.
+- Ensure that only trusted resources are loaded in this page.
+
+---
+
+## **Step 4: Embed the Sandboxed Iframe in Your Extension**
+
+In your main extension page (e.g., `popup.html`), embed the sandboxed iframe:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Twitter Embed</title>
+</head>
+<body>
+  <h1>Twitter Embed Example</h1>
+
+  <!-- Sandboxed iframe -->
+  <iframe 
+    src="sandbox.html" 
+    sandbox="allow-scripts" 
+    style="width:100%; height:500px; border:none;">
+  </iframe>
+</body>
+</html>
+```
+
+### Explanation:
+- The `sandbox` attribute ensures that the iframe operates in a restricted environment.
+- The `allow-scripts` token enables script execution within the iframe but prevents it from accessing parent resources.
+
+---
+
+## **Step 5: Enable Communication Between Parent and Iframe (Optional)**
+
+If you need to pass data between your extension and the sandboxed iframe (e.g., dynamically updating tweet URLs), use the `postMessage()` API.
+
+### Parent Page (`popup.html`):
+```javascript
+const iframe = document.querySelector('iframe');
+
+// Send a message to the iframe
+iframe.contentWindow.postMessage({ tweetUrl: 'https://twitter.com/TwitterDev/status/987654321' }, '*');
+
+// Listen for messages from the iframe
+window.addEventListener('message', (event) => {
+  console.log('Message from iframe:', event.data);
+});
+```
+
+### Sandboxed Page (`sandbox.html`):
+```javascript
+// Listen for messages from the parent
+window.addEventListener('message', (event) => {
+  const tweetUrl = event.data.tweetUrl;
+  
+  // Dynamically update tweet embed
+  document.body.innerHTML = `
+    <blockquote class="twitter-tweet">
+      <a href="${tweetUrl}"></a>
+    </blockquote>
+    <script async src="https://platform.twitter.com/widgets.js"></script>`;
+});
+```
+
+---
+
+## **Step 6: Test and Debug**
+
+### Testing Checklist:
+1. Verify that tweets load correctly within the sandboxed iframe.
+2. Ensure no errors related to CSP violations appear in Chrome’s Developer Tools (`Ctrl+Shift+I`).
+3. Test communication between the parent and iframe using `postMessage()` if implemented.
+
+### Debugging Tips:
+- Use Chrome’s Developer Tools to inspect network requests and console logs.
+- If tweets fail to load, check for issues with CSP or missing permissions in `manifest.json`.
+
+---
+
+## **Security Considerations**
+1. **Avoid `allow-same-origin`:** Using this token with `allow-scripts` can compromise security by allowing scripts in the iframe to remove its sandbox restrictions.
+2. **Restrict Permissions:** Only include necessary permissions in your manifest file.
+3. **Validate Messages:** When using `postMessage()`, always validate incoming data to prevent potential attacks.
+
+---
+
+By following this guide, you can securely embed Twitter content in your Chrome extension using a sandboxed iframe, fully compliant with Manifest V3 requirements. This approach ensures both functionality and security while leveraging Chrome’s advanced CSP features.
+
+Citations:
+[1] https://web.dev/articles/sandboxed-iframes
+[2] https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe?retiredLocale=it
+[3] https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions
+[4] https://developer.chrome.com/docs/extensions/develop/security-privacy/stay-secure
+[5] https://stackoverflow.com/questions/77627021/sandboxed-iframe-in-chrome-extension-dynamically-set-src-attribute
+[6] https://groups.google.com/a/chromium.org/g/chromium-extensions/c/969VmAxPJvk/m/3wJFREN4cNEJ
+[7] https://css-tricks.com/how-to-transition-to-manifest-v3-for-chrome-extensions/
+[8] https://cloud.google.com/blog/products/data-analytics/iframe-sandbox-tutorial?hl=en
+[9] https://blog.logrocket.com/ultimate-guide-iframes/
+[10] https://developer.chrome.com/docs/extensions/reference/manifest/sandbox
