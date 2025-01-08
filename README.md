@@ -1,4 +1,4 @@
-# Twitter Bookmarks Search
+# X Bookmark Search
 
 A Chrome extension that enables semantic search of your Twitter bookmarks using local LangChain embeddings. Find your bookmarked tweets by searching for concepts and meaning, not just keywords.
 
