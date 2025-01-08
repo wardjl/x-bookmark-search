@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Twitter Bookmark Search</title>
+  <title>x bookmark search</title>
   <meta charset="UTF-8">
+  <meta name="twitter:widgets:theme" content="dark">
+  <meta name="twitter:widgets:border-color" content="#ffffff">
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      height: 100vh;
     }
     .relative { position: relative; }
     .min-h-screen { min-height: 100vh; }
@@ -51,9 +55,11 @@
     /* Background styles */
     .bg-gradient {
       background: 
-        radial-gradient(ellipse 100% 100% at 50% 150%, rgba(255,255,255,0.2), transparent),
-        radial-gradient(ellipse 50% 50% at 20% 150%, rgba(255,255,255,0.15), transparent),
-        radial-gradient(ellipse 50% 50% at 80% 150%, rgba(255,255,255,0.15), transparent);
+        radial-gradient(ellipse 150% 150% at 50% 150%, rgba(255,255,255,0.3), transparent),
+        radial-gradient(circle 80% 80% at 20% 150%, rgba(255,255,255,0.25), transparent),
+        radial-gradient(circle 80% 80% at 80% 150%, rgba(255,255,255,0.25), transparent),
+        radial-gradient(circle 60% 60% at 40% 120%, rgba(255,255,255,0.2), transparent),
+        radial-gradient(circle 60% 60% at 60% 120%, rgba(255,255,255,0.2), transparent);
     }
     
     .noise-overlay {
@@ -63,10 +69,13 @@
 
     /* Input styles */
     .search-input {
+      width: 100%;
+      max-width: 1200px;
       background-color: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: white;
       transition: all 0.2s;
+      text-transform: lowercase;
     }
     .search-input:hover {
       background-color: rgba(255, 255, 255, 0.05);
@@ -126,16 +135,16 @@
     /* Tweet embed container styles */
     .tweet-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
       gap: 1rem;
       width: 100%;
     }
     
     .tweet-container {
-      background: rgba(255, 255, 255, 0.05);
+      min-height: 200px;
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 1rem;
-      overflow: hidden;
       transition: all 0.2s;
     }
 
@@ -199,6 +208,67 @@
       max-height: 300px;
       object-fit: contain;
     }
+
+    footer a {
+      font-size: 1.25rem;
+    }
+
+    /* Main container styles */
+    .relative.flex.min-h-screen.flex-col {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    main.flex-1 {
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Container for scrollable content */
+    #search-results {
+      height: calc(100vh - 250px); /* Adjust based on header height */
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 1rem;
+      /* Fancy scrollbar styles */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    }
+
+    /* Webkit scrollbar styles */
+    #search-results::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #search-results::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #search-results::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      border: 2px solid transparent;
+    }
+
+    #search-results::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Tweet grid adjustments */
+    .tweet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+      gap: 1rem;
+      width: 100%;
+    }
+    
+    .tweet-container {
+      min-height: 200px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      transition: all 0.2s;
+    }
   </style>
 </head>
 <body>
@@ -214,14 +284,11 @@
               a better way to search your x bookmarks
             </h1>
             <p class="mt-4 text-base text-white/60" id="status-text">
-              Click the button below to import your bookmarks
+              importing your bookmarks...
             </p>
-            <button id="import-button" class="import-button mt-8">
-              Import Bookmarks
-            </button>
           </div>
 
-          <div class="mx-auto max-w-6xl">
+          <div class="mx-auto" style="max-width: 1200px;">
             <div class="relative">
               <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -229,7 +296,7 @@
               </svg>
               <input
                 type="search"
-                placeholder="Search your bookmarks..."
+                placeholder="search your bookmarks..."
                 id="search-input"
                 class="search-input h-14 w-full rounded-full pl-12 pr-6 text-lg"
                 disabled
@@ -251,7 +318,6 @@
           target="_blank" 
           rel="noopener noreferrer"
           class="text-white/40 hover:text-white"
-          style="text-decoration: none; font-size: 0.875rem;"
         >
           made by ishan
         </a>

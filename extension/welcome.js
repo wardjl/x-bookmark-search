@@ -7,12 +7,11 @@
 const searchInput = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results').querySelector('.tweet-grid');
 const statusText = document.getElementById('status-text');
-const importButton = document.getElementById('import-button');
 
 let allTweets = [];  // Will store tweet objects + their vectors (embedding)
 
 // ----------------------------------------------------------
-// 1) On Load, Check if Tweets Are Imported
+// 1) On Load, Check if Tweets Are Imported and Trigger Import
 // ----------------------------------------------------------
 chrome.storage.local.get(null, (result) => {
   const meta = result.bookmarked_tweets_meta;
@@ -28,38 +27,24 @@ chrome.storage.local.get(null, (result) => {
     
     statusText.textContent = `${meta.totalTweets} bookmarks imported`;
     searchInput.disabled = false;
-    importButton.innerHTML = 'Re-Import Bookmarks';
     
     // Build local embeddings for all these tweets
     buildAllTweetEmbeddings(allTweets);
+  } else {
+    // Automatically trigger import
+    statusText.textContent = 'please wait while we import your bookmarks...';
+    chrome.runtime.sendMessage({ action: "exportBookmarks" });
   }
 });
 
 // ----------------------------------------------------------
-// 2) Import Button: Trigger background script
-// ----------------------------------------------------------
-importButton.addEventListener('click', () => {
-  importButton.disabled = true;
-  importButton.innerHTML = `
-    <span class="button-spinner"></span>
-    Opening Twitter...
-  `;
-  statusText.textContent = 'Please wait while we import your bookmarks...';
-  
-  // Send message to background script to start import
-  chrome.runtime.sendMessage({ action: "exportBookmarks" });
-});
-
-// ----------------------------------------------------------
-// 3) Listen for "tweetsReady" from background to load new tweets
+// 2) Listen for Import Results
 // ----------------------------------------------------------
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "tweetsReady") {
     const count = message.tweets ? message.tweets.length : 0;
     allTweets = message.tweets || [];
     statusText.textContent = `${count} bookmarks imported`;
-    importButton.disabled = false;
-    importButton.innerHTML = 'Re-Import Bookmarks';
     searchInput.disabled = false;
 
     // Build embeddings for newly imported tweets
@@ -70,14 +55,107 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   } else if (message.action === "importError") {
     statusText.textContent = message.error;
-    importButton.disabled = false;
-    importButton.innerHTML = 'Import Failed - Try Again';
   }
 });
 
 // ----------------------------------------------------------
-// 4) Build Embeddings for Tweets
-//    - "Semantic-ish" local approach: TF-IDF or word hashing
+// 3) Search Input Handler
+// ----------------------------------------------------------
+searchInput.addEventListener('input', (e) => {
+  const query = e.target.value.trim().toLowerCase();
+  if (!query) {
+    displayTweets(allTweets);
+    return;
+  }
+
+  const queryVector = computeTfIdfVector(query);
+  const results = allTweets
+    .map(tweet => ({
+      tweet,
+      score: cosineSimilaritySparse(queryVector, tweet.embedding)
+    }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(item => item.tweet);
+
+  displayTweets(results);
+});
+
+// ----------------------------------------------------------
+// 4) Display Tweets Using Custom Implementation
+// ----------------------------------------------------------
+function displayTweets(tweets) {
+  // Clear previous results
+  searchResults.innerHTML = '';
+  
+  if (tweets.length === 0) {
+    searchResults.innerHTML = `
+      <div class="tweet-loading">
+        No tweets found
+      </div>
+    `;
+    return;
+  }
+
+  // Create custom display for each tweet
+  tweets.forEach(tweet => {
+    searchResults.appendChild(createTweetDisplay(tweet));
+  });
+}
+
+// ----------------------------------------------------------
+// 5) Create Tweet Display
+// ----------------------------------------------------------
+function createTweetDisplay(tweet) {
+  const container = document.createElement('div');
+  container.className = 'tweet-container p-4';
+
+  // Format the date
+  const date = new Date(tweet.timestamp);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  container.innerHTML = `
+    <div class="flex items-center gap-3 mb-2">
+      <img src="${tweet.author.profile_image_url}" alt="" class="w-12 h-12 rounded-full">
+      <div>
+        <div class="font-medium text-white">${tweet.author.name}</div>
+        <div class="text-white/60">@${tweet.author.screen_name}</div>
+      </div>
+    </div>
+    <div class="text-white/90 mb-2 whitespace-pre-wrap">${tweet.full_text}</div>
+    ${
+      tweet.media
+        ? `
+          <div class="mb-2">
+            ${
+              tweet.media.type === 'photo'
+                ? `<img src="${tweet.media.source}" alt="" class="w-full rounded-lg">`
+                : (tweet.media.type === 'video' || tweet.media.type === 'animated_gif')
+                  ? `<video src="${tweet.media.source}" controls class="w-full rounded-lg"></video>`
+                  : ''
+            }
+          </div>
+        `
+        : ''
+    }
+    <div class="flex justify-between items-center text-sm text-white/40">
+      <span>${formattedDate}</span>
+      <a href="${tweet.url}" target="_blank" rel="noopener noreferrer"
+         class="hover:text-white transition-colors">
+        View on Twitter →
+      </a>
+    </div>
+  `;
+  
+  return container;
+}
+
+// ----------------------------------------------------------
+// 6) TF-IDF Implementation (unchanged)
 // ----------------------------------------------------------
 /**
  * For demonstration, let's do a simple TF-IDF-like approach
@@ -174,7 +252,7 @@ function computeTfIdfVector(text) {
 }
 
 // ----------------------------------------------------------
-// 5) Cosine Similarity for "Sparse" TF-IDF Vectors
+// 7) Cosine Similarity for "Sparse" TF-IDF Vectors
 // ----------------------------------------------------------
 function cosineSimilaritySparse(vecA, vecB) {
   // vecA and vecB are objects like: { word -> tfidfScore }
@@ -205,115 +283,4 @@ function cosineSimilaritySparse(vecA, vecB) {
     return 0;
   }
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
-}
-
-// ----------------------------------------------------------
-// 6) Debounced Search: embed query -> compare -> show top 10
-// ----------------------------------------------------------
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), wait);
-  };
-}
-
-/**
- * Actually run the "semantic" search
- */
-const performSearch = debounce((query) => {
-  // If user clears
-  if (!query) {
-    searchResults.innerHTML = '';
-    return;
-  }
-
-  // If no tweets, or we haven't built embeddings yet
-  if (!allTweets?.length || !allTweets[0]?.embedding) {
-    return;
-  }
-
-  // Embed the query (TF-IDF)
-  const queryVector = computeTfIdfVector(query);
-
-  // Score each tweet
-  const scored = allTweets.map(tweet => {
-    const sim = cosineSimilaritySparse(queryVector, tweet.embedding);
-    return { tweet, similarity: sim };
-  });
-
-  // Sort descending
-  scored.sort((a, b) => b.similarity - a.similarity);
-
-  // Take top 10
-  const top10 = scored.slice(0, 10);
-
-  // Clear results
-  searchResults.innerHTML = '';
-
-  if (top10.length > 0) {
-    top10.forEach(({ tweet }) => {
-      searchResults.appendChild(createTweetDisplay(tweet));
-    });
-  } else {
-    searchResults.innerHTML = `
-      <div class="status-message rounded-lg p-4" style="grid-column: 1 / -1;">
-        <p class="text-white/60">No tweets found matching "${query}"</p>
-      </div>
-    `;
-  }
-}, 300);
-
-// Hook up the search input
-searchInput.addEventListener('input', (e) => performSearch(e.target.value));
-
-// ----------------------------------------------------------
-// 7) Create Tweet Display
-// ----------------------------------------------------------
-function createTweetDisplay(tweet) {
-  const container = document.createElement('div');
-  container.className = 'tweet-container p-4';
-
-  // Format the date
-  const date = new Date(tweet.timestamp);
-  const formattedDate = date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-
-  container.innerHTML = `
-    <div class="flex items-center gap-3 mb-2">
-      <img src="${tweet.author.profile_image_url}" alt="" class="w-12 h-12 rounded-full">
-      <div>
-        <div class="font-medium text-white">${tweet.author.name}</div>
-        <div class="text-white/60">@${tweet.author.screen_name}</div>
-      </div>
-    </div>
-    <div class="text-white/90 mb-2 whitespace-pre-wrap">${tweet.full_text}</div>
-    ${
-      tweet.media
-        ? `
-          <div class="mb-2">
-            ${
-              tweet.media.type === 'photo'
-                ? `<img src="${tweet.media.source}" alt="" class="w-full rounded-lg">`
-                : (tweet.media.type === 'video' || tweet.media.type === 'animated_gif')
-                  ? `<video src="${tweet.media.source}" controls class="w-full rounded-lg"></video>`
-                  : ''
-            }
-          </div>
-        `
-        : ''
-    }
-    <div class="flex justify-between items-center text-sm text-white/40">
-      <span>${formattedDate}</span>
-      <a href="${tweet.url}" target="_blank" rel="noopener noreferrer"
-         class="hover:text-white transition-colors">
-        View on Twitter →
-      </a>
-    </div>
-  `;
-  
-  return container;
 }
