@@ -2,14 +2,21 @@
 
 A Chrome extension that enables semantic search of your Twitter bookmarks using local LangChain embeddings. Find your bookmarked tweets by searching for concepts and meaning, not just keywords.
 
+## Installation
+
+1. Clone this repository
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable "Developer mode" in the top right corner
+4. Click "Load unpacked" and select the `extension` directory
+
 ## Features
 
-- 🔍 Semantic search across your Twitter bookmarks
-- 🧠 Uses LangChain and embeddings for concept-based matching
-- 💨 Fast local search - no cloud/API dependencies
-- 🔒 Privacy-focused: all processing happens in your browser
-- 🎯 Find tweets based on meaning and concepts, not just exact text matches
-- 📱 Works directly in your Twitter interface
+- Semantic search across your Twitter bookmarks
+- Uses LangChain and embeddings for concept-based matching
+- Fast local search - no cloud/API dependencies
+- Privacy-focused: all processing happens in your browser
+- Find tweets based on meaning and concepts, not just exact text matches
+- Works directly in your Twitter interface
 
 ## How It Works
 
@@ -17,13 +24,6 @@ A Chrome extension that enables semantic search of your Twitter bookmarks using 
 2. Creates embeddings using LangChain to understand the semantic meaning of tweets
 3. When you search, it finds tweets that match the concept you're looking for
 4. Results are ranked by semantic similarity to your query
-
-## Installation
-
-1. Clone this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the `extension` directory
 
 ## Usage
 
