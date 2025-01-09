@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Bookmarks Wrapped",
+  "name": "x bookmark search",
   "version": "1.0.2",
-  "description": "Spotify wrapped but for Twitter Bookmarks.",
+  "description": "a better way to search your bookmarks.",
   "permissions": [
     "storage",
     "webRequest",
