@@ -16,7 +16,6 @@ A Chrome extension that enables semantic search of your Twitter bookmarks using 
 - Fast local search - no cloud/API dependencies
 - Privacy-focused: all processing happens in your browser
 - Find tweets based on meaning and concepts, not just exact text matches
-- Works directly in your Twitter interface
 
 ## How It Works
 
@@ -41,7 +40,7 @@ A Chrome extension that enables semantic search of your Twitter bookmarks using 
 
 ## Credit to Forked Project
 
-This project was heavily inspired by and built upon the functionality provided by the [bookmarks-wrapped](https://github.com/sahil-lalani/bookmarks-wrapped) project by [Sahil Lalani](https://github.com/sahil-lalani). Much of the core functionality, including bookmark processing and search mechanisms, was adapted from this excellent work. Special thanks to Sahil Lalani for laying the foundation.
+This project was heavily inspired by and built upon the functionality provided by the [bookmarks-wrapped](https://github.com/sahil-lalani/bookmarks-wrapped) project by [Sahil Lalani](https://github.com/sahil-lalani). Much of the core functionality, including bookmark processing, was adapted from his work. Special thanks to Sahil for laying the foundation.
 
 ## Development
 
