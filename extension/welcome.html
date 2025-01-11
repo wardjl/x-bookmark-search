@@ -138,21 +138,26 @@
     /* Tweet embed container styles */
     .tweet-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 1rem;
       width: 100%;
-      padding: 0 1rem;
     }
     
-    @media (min-width: 768px) {
+    @media (min-width: 1200px) {
+      .tweet-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1199px) {
       .tweet-grid {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    @media (min-width: 1200px) {
+    @media (max-width: 767px) {
       .tweet-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr;
       }
     }
     
@@ -357,6 +362,7 @@
     .relative.flex.min-h-screen.flex-col {
       height: 100vh;
       overflow: hidden;
+      padding-top: 1rem;
     }
 
     main.flex-1 {
@@ -368,12 +374,12 @@
     #search-results {
       height: auto;
       min-height: 200px;
-      max-height: calc(100vh - 400px);
+      max-height: calc(100vh - 120px);
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 3rem;
-      padding-bottom: 5rem;
-      margin-bottom: 2rem;
+      padding: 2rem;
+      padding-bottom: 2rem;
+      margin-bottom: 1rem;
       scrollbar-width: thin;
       scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
     }
@@ -400,7 +406,7 @@
     /* Tweet grid adjustments */
     .tweet-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 1rem;
       width: 100%;
     }
@@ -434,17 +440,7 @@
 
     /* Ensure footer doesn't overlap */
     .footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(8px);
-      padding: 1rem 0;
-      text-align: center;
-      z-index: 10;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      margin-top: auto;
+      display: none;
     }
   </style>
 </head>
@@ -455,16 +451,7 @@
     
     <div class="relative flex min-h-screen flex-col">
       <main class="flex-1">
-        <div class="container mx-auto px-4 py-16">
-          <div class="mb-12 text-center" style="width: 100%;">
-            <h1 class="text-6xl font-bold tracking-tight text-white">
-              a better way to search your x bookmarks
-            </h1>
-            <p class="mt-4 text-base text-white/60" id="status-text" style="font-size: 1.25rem;">
-              importing your bookmarks...
-            </p>
-          </div>
-
+        <div class="container mx-auto px-4 pt-4">
           <div class="mx-auto" style="max-width: 100%;">
             <div class="relative">
               <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2">
@@ -481,20 +468,19 @@
               />
             </div>
 
+            <p class="mt-4 text-base text-white/60" id="status-text" style="font-size: 1.25rem; text-align: center;">
+              importing your bookmarks...
+            </p>
+
             <div class="mt-8" id="search-results">
               <div class="tweet-grid">
                 <!-- Tweet embeds will be inserted here -->
               </div>
               <div style="height: 100px;"></div>
-
             </div>
           </div>
         </div>
       </main>
-
-      <footer class="footer">
-        <span class="text-white/40" style="font-size: 1.25rem;">made by </span><a href="https://x.com/_ishand_" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-white">ishan,</a>,<span class="text-white/40" style="font-size: 1.25rem;"> fully </span><a href="https://github.com/ishandeshpande/twitter-bookmark-search" target="_blank" rel="noopener noreferrer" class="text-white/40 hover:text-white">open source</a>
-      </footer>
     </div>
   </div>
 
