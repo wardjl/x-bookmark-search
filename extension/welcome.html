@@ -773,6 +773,7 @@
       content: url('lib/xAI logo_white.jpg');
     }
 
+    /* Update notification popup styles */
     .notification-popup {
       position: fixed;
       top: 20px;
@@ -862,6 +863,124 @@
 
     .chat-message .list-item:last-child {
       margin-bottom: 0.5rem;
+    }
+
+    /* Add settings button in the top right */
+    .settings-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      padding: 8px;
+      transition: color 0.2s;
+      z-index: 100;
+    }
+
+    .settings-button:hover {
+      color: white;
+    }
+
+    /* Add settings popup */
+    .settings-popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+      transition: opacity 0.3s;
+    }
+
+    .settings-popup.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .settings-content {
+      background: rgba(0, 0, 0, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      color: white;
+    }
+
+    .settings-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .settings-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .settings-close {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      padding: 8px;
+      transition: color 0.2s;
+    }
+
+    .settings-close:hover {
+      color: white;
+    }
+
+    .settings-body {
+      padding: 20px;
+    }
+
+    .settings-item {
+      margin-bottom: 20px;
+    }
+
+    .settings-item label {
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .settings-item input {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+
+    .settings-item input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .save-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .save-button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
     }
   </style>
 </head>
@@ -956,6 +1075,35 @@
               <path d="M2.502 2.133l.527 2.109c.009.035.808 3.277.947 6.757h6.023v2H3.977c-.14 3.473-.938 6.722-.947 6.758l-.526 2.108L22.236 12 2.502 2.133z"></path>
             </svg>
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add settings button in the top right -->
+  <button id="settings-button" class="settings-button">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+  </button>
+
+  <!-- Add settings popup -->
+  <div id="settings-popup" class="settings-popup hidden">
+    <div class="settings-content">
+      <div class="settings-header">
+        <h2>Settings</h2>
+        <button class="settings-close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-item">
+          <label for="xai-api-key">xAI API Key</label>
+          <input type="password" id="xai-api-key" placeholder="Enter your xAI API key" />
+          <button id="save-api-key" class="save-button">Save</button>
         </div>
       </div>
     </div>

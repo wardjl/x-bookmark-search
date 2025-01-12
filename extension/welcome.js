@@ -20,6 +20,53 @@ const CACHE_KEY = 'tweet_embeddings_cache';
 // After embeddings are processed and tweets are loaded
 let chat;
 
+// Add settings functionality
+const settingsButton = document.getElementById('settings-button');
+const settingsPopup = document.getElementById('settings-popup');
+const settingsClose = document.querySelector('.settings-close');
+const saveApiKey = document.getElementById('save-api-key');
+const apiKeyInput = document.getElementById('xai-api-key');
+
+// Load saved API key
+chrome.storage.local.get(['xaiApiKey'], (result) => {
+  if (result.xaiApiKey) {
+    apiKeyInput.value = result.xaiApiKey;
+  }
+});
+
+// Toggle settings popup
+settingsButton.addEventListener('click', () => {
+  settingsPopup.classList.remove('hidden');
+});
+
+settingsClose.addEventListener('click', () => {
+  settingsPopup.classList.add('hidden');
+});
+
+// Close on click outside
+settingsPopup.addEventListener('click', (e) => {
+  if (e.target === settingsPopup) {
+    settingsPopup.classList.add('hidden');
+  }
+});
+
+// Save API key
+saveApiKey.addEventListener('click', () => {
+  const apiKey = apiKeyInput.value.trim();
+  chrome.storage.local.set({ xaiApiKey: apiKey }, () => {
+    // Show success notification
+    const notification = document.getElementById('notification-popup');
+    const notificationText = document.getElementById('notification-text');
+    notificationText.textContent = 'API key saved successfully!';
+    notification.classList.remove('hidden');
+    setTimeout(() => {
+      notification.classList.add('hidden');
+    }, 3000);
+    
+    settingsPopup.classList.add('hidden');
+  });
+});
+
 // ----------------------------------------------------------
 // 1) On Load, Check if Tweets Are Imported and Trigger Import
 // ----------------------------------------------------------

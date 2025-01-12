@@ -134,6 +134,12 @@ Remember to adapt your response style based on the type of question asked - whet
   }
 
   async generateGrokResponse(query, relevantTweets) {
+    // Get API key from storage
+    const { xaiApiKey } = await chrome.storage.local.get(['xaiApiKey']);
+    if (!xaiApiKey) {
+      throw new Error('Please set your xAI API key in settings');
+    }
+
     const tweetsContext = relevantTweets
       .map(tweet => `Tweet by @${tweet.author.screen_name}: "${tweet.full_text}" (url: ${tweet.url})`)
       .join('\n\n');
@@ -157,7 +163,7 @@ Remember to adapt your response style based on the type of question asked - whet
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROK_API_KEY}`
+          'Authorization': `Bearer ${xaiApiKey}`
         },
         body: JSON.stringify({
           model: GROK_MODEL,
