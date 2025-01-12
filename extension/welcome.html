@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>x bookmark search</title>
+  <title>X Bookmark Manager</title>
   <meta charset="UTF-8">
   <meta name="twitter:widgets:theme" content="dark">
   <meta name="twitter:widgets:border-color" content="#ffffff">
@@ -79,6 +79,7 @@
       color: white;
       transition: all 0.2s;
       text-transform: lowercase;
+      margin-top: 5px;
     }
     .search-input:hover {
       background-color: rgba(255, 255, 255, 0.05);
@@ -171,7 +172,22 @@
       flex-direction: column;
       cursor: pointer;
       position: relative;
+      opacity: 0; /* Start hidden */
+      animation: fadeIn 0.3s ease-out forwards;
     }
+
+    /* Add animation delay for sequential fade in */
+    .tweet-container:nth-child(1) { animation-delay: 0s; }
+    .tweet-container:nth-child(2) { animation-delay: 0.05s; }
+    .tweet-container:nth-child(3) { animation-delay: 0.1s; }
+    .tweet-container:nth-child(4) { animation-delay: 0.15s; }
+    .tweet-container:nth-child(5) { animation-delay: 0.2s; }
+    .tweet-container:nth-child(6) { animation-delay: 0.25s; }
+    .tweet-container:nth-child(7) { animation-delay: 0.3s; }
+    .tweet-container:nth-child(8) { animation-delay: 0.35s; }
+    .tweet-container:nth-child(9) { animation-delay: 0.4s; }
+    .tweet-container:nth-child(10) { animation-delay: 0.45s; }
+    /* Add more if needed */
 
     .tweet-container:hover {
       background: rgba(255, 255, 255, 0.05);
@@ -982,6 +998,45 @@
       background: rgba(255, 255, 255, 0.15);
       border-color: rgba(255, 255, 255, 0.3);
     }
+
+    /* Add fade-in animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tweet-container {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      transition: background 0.2s;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      position: relative;
+      opacity: 0; /* Start hidden */
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* Add animation delay for sequential fade in */
+    .tweet-container:nth-child(1) { animation-delay: 0s; }
+    .tweet-container:nth-child(2) { animation-delay: 0.05s; }
+    .tweet-container:nth-child(3) { animation-delay: 0.1s; }
+    .tweet-container:nth-child(4) { animation-delay: 0.15s; }
+    .tweet-container:nth-child(5) { animation-delay: 0.2s; }
+    .tweet-container:nth-child(6) { animation-delay: 0.25s; }
+    .tweet-container:nth-child(7) { animation-delay: 0.3s; }
+    .tweet-container:nth-child(8) { animation-delay: 0.35s; }
+    .tweet-container:nth-child(9) { animation-delay: 0.4s; }
+    .tweet-container:nth-child(10) { animation-delay: 0.45s; }
+    /* Add more if needed */
   </style>
 </head>
 <body>

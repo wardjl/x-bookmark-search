@@ -67,53 +67,98 @@ saveApiKey.addEventListener('click', () => {
   });
 });
 
-// ----------------------------------------------------------
-// 1) On Load, Check if Tweets Are Imported and Trigger Import
-// ----------------------------------------------------------
-chrome.storage.local.get(null, async (result) => {
-  const meta = result.bookmarked_tweets_meta;
-  if (meta) {
+// Add these constants at the top
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+// Modify the storage check function
+async function loadAllTweets(retryCount = 0) {
+  try {
+    const result = await chrome.storage.local.get(null);
+    const meta = result.bookmarked_tweets_meta;
+    
+    if (!meta) {
+      statusText.textContent = 'No bookmarks found, initiating import...';
+      chrome.runtime.sendMessage({ action: "exportBookmarks" });
+      return null;
+    }
+
     // Gather all tweets in memory
-    allTweets = [];
+    let loadedTweets = [];
+    let missingChunks = false;
+    
     for (let i = 0; i < meta.totalChunks; i++) {
       const chunk = result[`bookmarked_tweets_${i}`];
       if (chunk?.tweets) {
-        allTweets.push(...chunk.tweets);
-      }
-    }
-    
-    statusText.textContent = `${meta.totalTweets} bookmarks imported`;
-    searchInput.disabled = false;
-    
-    // Try to load cached embeddings first
-    const cache = await loadEmbeddingCache();
-    if (cache) {
-      // Apply cached embeddings to tweets
-      let cacheHits = 0;
-      allTweets.forEach(tweet => {
-        if (cache[tweet.id]) {
-          tweet.embedding = cache[tweet.id];
-          cacheHits++;
-        }
-      });
-      console.log(`Loaded ${cacheHits} embeddings from cache`);
-      
-      // Only build embeddings for tweets without them
-      const tweetsNeedingEmbeddings = allTweets.filter(t => !t.embedding);
-      if (tweetsNeedingEmbeddings.length > 0) {
-        statusText.textContent = `Building embeddings for ${tweetsNeedingEmbeddings.length} new tweets...`;
-        await buildAllTweetEmbeddings(tweetsNeedingEmbeddings);
+        loadedTweets.push(...chunk.tweets);
       } else {
-        statusText.textContent = `${allTweets.length} bookmarks ready for search`;
+        missingChunks = true;
+        console.warn(`Missing chunk ${i}`);
       }
-    } else {
-      // Build embeddings for all tweets
-      await buildAllTweetEmbeddings(allTweets);
     }
-  } else {
-    // Automatically trigger import
-    statusText.textContent = 'please wait while we import your bookmarks...';
-    chrome.runtime.sendMessage({ action: "exportBookmarks" });
+
+    // Check if we have all tweets
+    if (loadedTweets.length !== meta.totalTweets || missingChunks) {
+      console.warn(`Expected ${meta.totalTweets} tweets but loaded ${loadedTweets.length}`);
+      
+      if (retryCount < MAX_RETRIES) {
+        statusText.textContent = `Retrying load... (${retryCount + 1}/${MAX_RETRIES})`;
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return loadAllTweets(retryCount + 1);
+      } else {
+        // If we still don't have all tweets after retries, trigger a new import
+        statusText.textContent = 'Incomplete data, refreshing bookmarks...';
+        chrome.runtime.sendMessage({ action: "exportBookmarks" });
+        return null;
+      }
+    }
+
+    return loadedTweets;
+  } catch (error) {
+    console.error('Error loading tweets:', error);
+    if (retryCount < MAX_RETRIES) {
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      return loadAllTweets(retryCount + 1);
+    }
+    throw error;
+  }
+}
+
+// Update the initial load section
+chrome.storage.local.get(null, async (result) => {
+  try {
+    const tweets = await loadAllTweets();
+    if (tweets) {
+      allTweets = tweets;
+      statusText.textContent = `${tweets.length} bookmarks imported`;
+      searchInput.disabled = false;
+
+      // Try to load cached embeddings
+      const cache = await loadEmbeddingCache();
+      if (cache) {
+        let cacheHits = 0;
+        allTweets.forEach(tweet => {
+          if (cache[tweet.id]) {
+            tweet.embedding = cache[tweet.id];
+            cacheHits++;
+          }
+        });
+        console.log(`Loaded ${cacheHits} embeddings from cache`);
+        
+        const tweetsNeedingEmbeddings = allTweets.filter(t => !t.embedding);
+        if (tweetsNeedingEmbeddings.length > 0) {
+          statusText.textContent = `Building embeddings for ${tweetsNeedingEmbeddings.length} new tweets...`;
+          await buildAllTweetEmbeddings(tweetsNeedingEmbeddings);
+        } else {
+          statusText.textContent = `${allTweets.length} bookmarks ready for search`;
+        }
+      } else {
+        await buildAllTweetEmbeddings(allTweets);
+      }
+    }
+  } catch (error) {
+    console.error('Error during initial load:', error);
+    statusText.textContent = 'Error loading bookmarks. Please refresh.';
   }
 });
 
@@ -225,24 +270,46 @@ searchInput.addEventListener('input', (e) => {
 // ----------------------------------------------------------
 // 4) Display Tweets Using Custom Implementation
 // ----------------------------------------------------------
-function displayTweets(tweets) {
-  // Clear previous results
-  searchResults.innerHTML = '';
+window.displayTweets = function displayTweets(tweets) {
+  const tweetGrid = document.querySelector('.tweet-grid');
   
-  if (tweets.length === 0) {
-    searchResults.innerHTML = `
-      <div class="tweet-loading">
-        No tweets found
-      </div>
-    `;
-    return;
-  }
-
-  // Create custom display for each tweet
-  tweets.forEach(tweet => {
-    searchResults.appendChild(createTweetDisplay(tweet));
+  // Clear existing tweets with fade out
+  const existingTweets = tweetGrid.querySelectorAll('.tweet-container');
+  existingTweets.forEach(tweet => {
+    tweet.style.animation = 'none'; // Remove existing animation
+    tweet.style.opacity = '0';
   });
-}
+  
+  // Brief delay before showing new tweets
+  setTimeout(() => {
+    tweetGrid.innerHTML = '';
+    
+    // Add new tweets
+    tweets.forEach(tweet => {
+      const tweetContainer = document.createElement('div');
+      tweetContainer.className = 'tweet-container';
+      
+      // Add tweet content
+      tweetContainer.innerHTML = `
+        <div class="tweet-header">
+          <img src="${tweet.author.profile_image_url}" alt="${tweet.author.name}" class="tweet-author-image">
+          <div class="tweet-author-info">
+            <div class="tweet-author-name">${tweet.author.name}</div>
+            <div class="tweet-author-handle">@${tweet.author.screen_name}</div>
+          </div>
+        </div>
+        <div class="tweet-content">${tweet.full_text}</div>
+      `;
+      
+      // Add click handler
+      tweetContainer.addEventListener('click', () => {
+        window.open(tweet.url, '_blank');
+      });
+      
+      tweetGrid.appendChild(tweetContainer);
+    });
+  }, 100); // Short delay for smooth transition
+};
 
 // ----------------------------------------------------------
 // 5) Create Tweet Display

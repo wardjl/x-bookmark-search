@@ -32,14 +32,16 @@ Your goal is to:
 2. When relevant, support your answers with examples from the user's saved tweets
 3. Reference specific tweets using @username format
 4. Provide context for why each referenced tweet is relevant
-5. If no relevant tweets are found, still answer the question to the best of your ability
+5. If you receive many relevant tweets, prioritize the most insightful ones but try to include at least 5-6 different examples when available
 6. Be concise but thorough in your explanations
 7. Maintain a helpful and engaging conversational tone
+8. Group similar tweets together thematically in your response
 
 Do not:
 - Include full URLs in your responses
 - Make claims about tweets that aren't provided
 - Ignore relevant tweet examples when they're available
+- List tweets without explaining their relevance
 
 Remember to adapt your response style based on the type of question asked - whether it's analysis, fact-finding, or general discussion.`
       }
@@ -106,20 +108,16 @@ Remember to adapt your response style based on the type of question asked - whet
       // Find relevant tweets using embeddings
       const relevantTweets = await this.findRelevantTweets(userInput);
       
-      // Generate response using OpenAI
+      // Generate response using Grok (now streaming)
       const response = await this.generateGrokResponse(userInput, relevantTweets);
       
-      // Add assistant message to chat
-      this.addMessage(response, 'assistant');
-
-      // Display referenced tweets in search results
+      // Display referenced tweets in search results after full response
       const referencedHandles = response.match(/@(\w+)/g)?.map(h => h.substring(1)) || [];
       const referencedTweets = this.tweets.filter(tweet => 
         referencedHandles.includes(tweet.author.screen_name)
       );
       
       if (referencedTweets.length > 0) {
-        // Use the existing displayTweets function from welcome.js
         window.displayTweets(referencedTweets);
       }
     } catch (error) {
@@ -151,10 +149,10 @@ Remember to adapt your response style based on the type of question asked - whet
     });
 
     // Keep only last 10 messages to prevent token limit issues
-    if (this.conversationHistory.length > 12) { // system prompt + 10 messages
+    if (this.conversationHistory.length > 12) {
       this.conversationHistory = [
-        this.conversationHistory[0], // Keep system prompt
-        ...this.conversationHistory.slice(-10) // Keep last 10 messages
+        this.conversationHistory[0],
+        ...this.conversationHistory.slice(-10)
       ];
     }
 
@@ -169,7 +167,7 @@ Remember to adapt your response style based on the type of question asked - whet
           model: GROK_MODEL,
           messages: this.conversationHistory,
           temperature: 0,
-          stream: false
+          stream: true // Enable streaming
         })
       });
 
@@ -177,20 +175,89 @@ Remember to adapt your response style based on the type of question asked - whet
         throw new Error('Grok API request failed');
       }
 
-      const data = await response.json();
-      const assistantMessage = data.choices[0].message.content;
+      // Create a temporary message div for streaming
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'chat-message assistant';
+      this.chatMessages.appendChild(messageDiv);
+      
+      let fullMessage = '';
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
 
-      // Add assistant's response to conversation history
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        // Decode the chunk
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices[0]?.delta?.content || '';
+              if (content) {
+                fullMessage += content;
+                // Format the message with markdown and tweet links
+                messageDiv.innerHTML = this.formatMessage(fullMessage);
+                // Scroll to bottom
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+              }
+            } catch (e) {
+              console.warn('Error parsing streaming response:', e);
+            }
+          }
+        }
+      }
+
+      // Add the complete message to conversation history
       this.conversationHistory.push({
         role: 'assistant',
-        content: assistantMessage
+        content: fullMessage
       });
 
-      return assistantMessage;
+      return fullMessage;
     } catch (error) {
       console.error('Grok API Error:', error);
       throw error;
     }
+  }
+
+  // Add a helper method to format messages
+  formatMessage(text) {
+    // Find all tweets referenced in the text and create a mapping of handles to URLs
+    const tweetRefs = {};
+    this.tweets.forEach(tweet => {
+      if (text.includes(`@${tweet.author.screen_name}`)) {
+        tweetRefs[tweet.author.screen_name] = tweet.url;
+      }
+    });
+    
+    // First convert markdown bold syntax to HTML
+    let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Format numbered lists with proper spacing
+    formattedText = formattedText.replace(
+      /(\d+\.\s+)([^\n]+)(?:\n|$)/g,
+      (match, number, content) => `<div class="list-item">${number}${content}</div>`
+    );
+    
+    // Convert @handles to clickable links
+    formattedText = formattedText.replace(
+      /@(\w+)/g,
+      (match, handle) => {
+        if (tweetRefs[handle]) {
+          return `<a href="${tweetRefs[handle]}" target="_blank" rel="noopener noreferrer" class="tweet-link">@${handle}</a>`;
+        }
+        return match;
+      }
+    );
+    
+    return formattedText;
   }
 
   async findRelevantTweets(query) {
@@ -203,10 +270,11 @@ Remember to adapt your response style based on the type of question asked - whet
       tweet: this.tweets[index]
     }));
     
-    // Sort by similarity and get top 3
+    // Sort by similarity and get top results
     return similarities
       .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 3)
+      .filter(item => item.similarity > 0.3) // Keep tweets above similarity threshold
+      .slice(0, 10) // Increase from 3 to 10 relevant tweets
       .map(item => item.tweet);
   }
 
