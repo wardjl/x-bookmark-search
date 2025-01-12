@@ -4,6 +4,7 @@
  ************************************************************/
 
 import { pipeline } from './lib/transformers.min.js';
+import { BookmarksChat } from './chat.js';
 
 // --- UI Elements ---
 const searchInput = document.getElementById('search-input');
@@ -15,6 +16,9 @@ let embeddingPipeline;   // Pipeline for local embeddings from Transformers.js
 let isProcessingEmbeddings = false;
 const BATCH_SIZE = 10; // Increased batch size
 const CACHE_KEY = 'tweet_embeddings_cache';
+
+// After embeddings are processed and tweets are loaded
+let chat;
 
 // ----------------------------------------------------------
 // 1) On Load, Check if Tweets Are Imported and Trigger Import
@@ -122,6 +126,13 @@ searchInput.addEventListener('input', (e) => {
   // Clear previous timeout
   if (searchTimeout) {
     clearTimeout(searchTimeout);
+  }
+  
+  // Clear results if search is emptied
+  if (!e.target.value.trim()) {
+    searchResults.innerHTML = '';
+    statusText.textContent = `${allTweets.length} tweets ready for search`;
+    return;
   }
   
   // Debounce search
@@ -336,6 +347,13 @@ async function buildAllTweetEmbeddings(tweets) {
     // Final cache update
     await updateEmbeddingCache(tweets);
     
+    chat = new BookmarksChat(
+      tweets.map(t => t.embedding), 
+      tweets,
+      embeddingPipeline
+    );
+    chat.enable();
+    
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
     statusText.textContent = `${tweets.length} bookmarks ready for search (processed in ${totalTime}s)`;
   } catch (error) {
@@ -411,3 +429,17 @@ function cosineSimilarity(a, b) {
   
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
+
+// Make displayTweets function global so it can be called from chat.js
+window.displayTweets = displayTweets;
+
+// Add clear button functionality
+const searchClearButton = document.querySelector('.search-clear-button');
+searchClearButton.addEventListener('click', () => {
+  searchInput.value = '';
+  searchInput.focus();
+  searchResults.innerHTML = '';
+  statusText.textContent = `${allTweets.length} tweets ready for search`;
+  // Trigger input event to update UI
+  searchInput.dispatchEvent(new Event('input'));
+});

@@ -373,8 +373,7 @@
     /* Container for scrollable content */
     #search-results {
       height: auto;
-      min-height: 200px;
-      max-height: calc(100vh - 120px);
+      height: 75%;
       overflow-y: auto;
       overflow-x: hidden;
       padding: 2rem;
@@ -442,9 +441,438 @@
     .footer {
       display: none;
     }
+
+    .chat-container {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 1rem;
+    }
+
+    .chat-messages {
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+
+    .chat-message {
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      max-width: 85%;
+      color: white;
+      font-size: 15px;
+      line-height: 20px;
+    }
+
+    .chat-message.user {
+      background: rgba(255, 255, 255, 0.1);
+      margin-left: auto;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .chat-message.assistant {
+      background: rgba(0, 0, 0, 0.4);
+      margin-right: auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-input-container {
+      position: relative;
+    }
+
+    .chat-input {
+      width: 100%;
+      padding: 0.75rem;
+      padding-right: 3rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1.5rem;
+      color: white;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-submit {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .chat-submit:hover {
+      color: white;
+    }
+
+    .chat-submit:disabled {
+      color: rgba(255, 255, 255, 0.3);
+      cursor: not-allowed;
+    }
+
+    .chat-message a {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 1px;
+      transition: all 0.2s;
+    }
+
+    .chat-message a:hover {
+      color: white;
+      border-bottom-color: white;
+    }
+
+    .chat-message .tweet-link {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 1px;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .chat-message .tweet-link:hover {
+      color: white;
+      border-bottom-color: white;
+    }
+
+    .chat-widget {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 1000;
+    }
+
+    .chat-toggle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s;
+      padding: 0;
+    }
+
+    .chat-toggle:hover {
+      transform: scale(1.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-toggle-logo {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .chat-popup {
+      position: absolute;
+      bottom: 80px;
+      right: 0;
+      width: 400px;
+      height: 600px;
+      max-height: calc(100vh - 120px);
+      background: rgba(0, 0, 0, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .chat-popup.hidden {
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+    }
+
+    .chat-header {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .chat-minimize {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .chat-minimize:hover {
+      color: white;
+    }
+
+    /* Update existing chat container styles */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: transparent;
+      border: none;
+      margin: 0;
+      padding: 1rem;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 0.5rem;
+      margin-bottom: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+      min-height: 435px;
+    }
+
+    /* Add scrollbar styles for chat messages */
+    .chat-messages::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Ensure input container stays at bottom */
+    .chat-input-container {
+    }
+
+    .chat-header-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chat-clear-button {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .chat-clear-button:hover {
+      color: rgb(244, 33, 46); /* X/Twitter red color */
+    }
+
+    .search-clear-button {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: color 0.2s;
+      display: none; /* Hidden by default */
+    }
+
+    .search-clear-button:hover {
+      color: rgb(244, 33, 46); /* X/Twitter red color */
+    }
+
+    /* Show clear button when input has text */
+    .search-input:not(:placeholder-shown) + .search-clear-button {
+      display: block;
+    }
+
+    /* Add this to your existing styles */
+    .search-input::-webkit-search-cancel-button {
+      -webkit-appearance: none;
+      appearance: none;
+      display: none;
+    }
+
+    .search-input::-ms-clear {
+      display: none;
+    }
+
+    .chat-header-logo {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 0.5rem;
+    }
+
+    .chat-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: white;
+      margin-right: auto;
+    }
+
+    .chat-toggle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s;
+      padding: 0;
+    }
+
+    .chat-toggle.white {
+      background: white;
+    }
+
+    .chat-toggle-logo {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .chat-toggle-logo.white {
+      content: url('lib/xAI logo_white.jpg');
+    }
+
+    .notification-popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.95);
+      color: white;
+      padding: 16px 28px;
+      border-radius: 20px;
+      z-index: 9999;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 12px;
+      transition: opacity 0.3s, transform 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #notification-text {
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .notification-popup button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      cursor: pointer;
+      padding: 6px 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+    }
+
+    .notification-popup button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      text-decoration: none;
+    }
+
+    #clear-confirm:hover {
+      background: rgba(244, 33, 46, 0.15);
+      border-color: rgba(244, 33, 46, 0.3);
+      color: rgb(244, 33, 46);
+    }
+
+    .notification-popup.hidden {
+      opacity: 0;
+      transform: translate(-50%, -20px);
+      pointer-events: none;
+    }
+
+    .notification-popup button {
+      background: none;
+      border: none;
+      color: rgb(29, 155, 240);
+      cursor: pointer;
+      padding: 0 8px;
+      font-weight: 500;
+    }
+
+    .notification-popup button:hover {
+      text-decoration: underline;
+    }
+
+    .chat-message strong {
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 15px;
+    }
+
+    .chat-message .list-item {
+      margin: 0.5rem 0;
+      padding-left: 1.25rem;
+      text-indent: -1.25rem;
+      font-size: 15px;
+      line-height: 20px;
+    }
+
+    .chat-message .list-item:first-child {
+      margin-top: 0.5rem;
+    }
+
+    .chat-message .list-item:last-child {
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 <body>
+  <div id="notification-popup" class="notification-popup hidden">
+    <svg class="notification-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <span id="notification-text">Clear all messages?</span>
+  </div>
+
   <div class="relative min-h-screen bg-black overflow-hidden">
     <div class="absolute inset-0 bg-gradient"></div>
     <div class="absolute inset-0 opacity-70 mix-blend-overlay noise-overlay"></div>
@@ -466,6 +894,11 @@
                 style="width: 100%;"
                 disabled
               />
+              <button class="search-clear-button" title="Clear search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
             </div>
 
             <p class="mt-4 text-base text-white/60" id="status-text" style="font-size: 1.25rem; text-align: center;">
@@ -481,6 +914,50 @@
           </div>
         </div>
       </main>
+    </div>
+  </div>
+
+  <div class="chat-widget">
+    <button id="chat-toggle" class="chat-toggle">
+      <img src="lib/xAI logo.jpg" alt="xAI" class="chat-toggle-logo">
+    </button>
+    
+    <div id="chat-popup" class="chat-popup hidden">
+      <div class="chat-header">
+        <img src="lib/xAI logo.jpg" alt="xAI" class="chat-header-logo">
+        <span class="chat-title">Grok</span>
+        <div class="chat-header-buttons">
+          <button class="chat-clear-button" title="Clear chat">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          <button class="chat-minimize" title="Minimize">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <!-- Messages will appear here -->
+        </div>
+        <div class="chat-input-container">
+          <input
+            type="text"
+            id="chat-input"
+            class="chat-input"
+            placeholder="Ask about your bookmarks..."
+            disabled
+          />
+          <button id="chat-submit" class="chat-submit" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.502 2.133l.527 2.109c.009.035.808 3.277.947 6.757h6.023v2H3.977c-.14 3.473-.938 6.722-.947 6.758l-.526 2.108L22.236 12 2.502 2.133z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

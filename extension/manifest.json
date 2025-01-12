@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "x bookmark search",
+  "name": "Bookmark Manager",
   "version": "1.0.2",
-  "description": "a better way to search your bookmarks.",
+  "description": "Manage your bookmarks using Grok.",
   "permissions": [
     "storage",
     "webRequest",
@@ -33,7 +33,10 @@
       "resources": [
         "welcome.html",
         "welcome.js",
+        "chat.js",
+        "config.js",
         "instructions.png",
+        "lib/xAI logo.jpg",
         "lib/transformers.min.js",
         "models/*"
       ],
